@@ -6,6 +6,7 @@ OpenAI has trained models on a vast amounts of existing text data, including cod
 OpenAI has the capability to address code based questions related to languages that the model has been exposed to during its training. However, since most Domain-Specific Languages (DSLs) are proprietary and not publicly available, Large Language Models (LLMs) typically require additional context to effectively answer questions or generate code in these languages. The following is a series of vetted steps that have been proven to enhance an LLM’s proficiency in interpreting a custom DSL language.
 
 ## Architecture
+![alt text](./assets/dsl-design.png "Resource Design")
 
 # Grammar File
 Code grammar files serve as essential components used by code editors to tokenize and highlight source code. These files break down code into smaller units known as tokens and associate them with specific scopes for syntax highlighting. Editors like Visual Studio Code rely on TextMate grammars, which define rules for tokenization using regular expressions. Additionally, grammar files include a repository of language elements (such as functions and comments) and patterns that correspond to these elements. By visually distinguishing keywords, strings, and other code components, code grammar files significantly enhance readability. Importantly, each programming language has its own dedicated grammar file, defining language-specific rules and features.
