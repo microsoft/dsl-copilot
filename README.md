@@ -8,6 +8,8 @@ OpenAI has the capability to address code based questions related to languages t
 ## Architecture
 ![alt text](./assets/dsl-design.png "Resource Design")
 
+![alt text](./assets/semantic-flow.png "Semantic Kernel Flow")
+
 # Grammar File
 Code grammar files serve as essential components used by code editors to tokenize and highlight source code. These files break down code into smaller units known as tokens and associate them with specific scopes for syntax highlighting. Editors like Visual Studio Code rely on TextMate grammars, which define rules for tokenization using regular expressions. Additionally, grammar files include a repository of language elements (such as functions and comments) and patterns that correspond to these elements. By visually distinguishing keywords, strings, and other code components, code grammar files significantly enhance readability. Importantly, each programming language has its own dedicated grammar file, defining language-specific rules and features.
 
