@@ -20,3 +20,5 @@ For our testing we utilized ANTLR (ANother Tool for Language Recognition) which 
 # Linting
 
 # Feedback loop and documented examples
+- TODO - One area where we believe we can enhance context with higher quality is by enabling users to rate responses and storing them in a database. These ratings can then be fed back into the Language Model’s (LLM) context, improving its performance over time.
+- TODO - Another important area would involve providing well-documented examples of code, explaining what each piece of code accomplishes, and discussing the underlying reasoning behind the code structure. This approach will help establish context for the Language Model (LLM) as it begins to reason and generate code. Our assumption is that a substantial number of commented examples will be necessary for this process to be effective.
