@@ -6,9 +6,21 @@ OpenAI has trained models on a vast amounts of existing text data, including cod
 OpenAI has the capability to address code based questions related to languages that the model has been exposed to during its training. However, since most Domain-Specific Languages (DSLs) are proprietary and not publicly available, Large Language Models (LLMs) typically require additional context to effectively answer questions or generate code in these languages. The following is a series of vetted steps that have been proven to enhance an LLM’s proficiency in interpreting a custom DSL language.
 
 ## Architecture
-![alt text](./assets/dsl-design.png "Resource Design")
 
+### Resource Architecture Design
+![alt text](./assets/dsl-design.png "Resource Design")
+1. Virtual Network - Single virtual network for all the resource.
+2. Storage Account - Utilized to drop documents and trigger an Azure function to chunk the document and store in AI Search. 
+3. Function - Triggered by a document in the storage account and chunks data to store in AI Search. The Function also utilizes OpenAI to create embeddings on the document content.
+4. App Service - Hosts the chat application for DSL based questions 
+5. AI Search - Used as a vector database and for semantic searching across indexes of chunked data.
+
+### Semantic Kernel Flow
 ![alt text](./assets/semantic-flow.png "Semantic Kernel Flow")
+1. Code Generation Prompt - Initial prompt to generate code in the DSL based language
+2. Code Compilation and Retry - Before responding to the user call the compiler to validate the code output. If the code is valid move to the next step if not then send OpenAI the code along with the compiler messages and retry compilation with the response.
+3. Linting - Lint the code to ensure it is formatted based on standards. 
+4. Feedback - Prompt the user for feedback and if the code is the correct response allow the user to accept it and store the response in CosmosDb for fine tuning later.
 
 # Grammar File
 Code grammar files serve as essential components used by code editors to tokenize and highlight source code. These files break down code into smaller units known as tokens and associate them with specific scopes for syntax highlighting. Editors like Visual Studio Code rely on TextMate grammars, which define rules for tokenization using regular expressions. Additionally, grammar files include a repository of language elements (such as functions and comments) and patterns that correspond to these elements. By visually distinguishing keywords, strings, and other code components, code grammar files significantly enhance readability. Importantly, each programming language has its own dedicated grammar file, defining language-specific rules and features.
@@ -17,6 +29,8 @@ During our testing, we discovered that using a grammar file for Domain-Specific 
 
 ## ANTLR
 For our testing we utilized ANTLR (ANother Tool for Language Recognition) which is a parser generator used for processing structured text. ANTLR provides language processing primitives such as lexers, grammars, and parsers, along with the runtime to process text using them. ANTLR helps create parsers that transform a piece of text into an organized structure called a parse tree or Abstract Syntax Tree (AST). The AST represents the logical content of code, assembled by combining various elements. To obtain a parse tree, you define a lexer and parser grammar, invoke ANTLR to generate the lexer and parser in your target language (e.g., Java, Python, C#), and then use these generated components to recognize and construct the parse tree. ANTLR enables you to work with various languages, data formats, and other text-based structures, making it a valuable tool for language processing and development
+
+# Prompt
 
 # Code Validation/Compilation
 
