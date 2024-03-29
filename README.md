@@ -31,10 +31,16 @@ During our testing, we discovered that using a grammar file for Domain-Specific 
 For our testing we utilized ANTLR (ANother Tool for Language Recognition) which is a parser generator used for processing structured text. ANTLR provides language processing primitives such as lexers, grammars, and parsers, along with the runtime to process text using them. ANTLR helps create parsers that transform a piece of text into an organized structure called a parse tree or Abstract Syntax Tree (AST). The AST represents the logical content of code, assembled by combining various elements. To obtain a parse tree, you define a lexer and parser grammar, invoke ANTLR to generate the lexer and parser in your target language (e.g., Java, Python, C#), and then use these generated components to recognize and construct the parse tree. ANTLR enables you to work with various languages, data formats, and other text-based structures, making it a valuable tool for language processing and development
 
 # Prompt
+When working with large language models like GPT-4, designing a prompt is a critical part of the process. A prompt serves as the input provided to the model to help produce relevant output. By utilizing prompt engineering, you can design and optimize prompts to guide an LLM in creating specific, high-quality outputs. Whether you’re asking questions to language models, generating code, or creating images, prompt engineering helps bridge the gap between queries and meaningful AI-generated responses, ultimately improving the quality of the outputs.
+
+## System Prompt
+The system prompt is used to ground the Language Model (LLM) around the DSL (Domain-Specific Language). During our testing, we discovered that providing a grammar file and a few well-documented examples assists the LLM in generating an initial pass at code generation, but still causes the LLM to hallucinate. We are currently in the process of testing code documentation and the RAG (Rating, Annotation, and Guidance) pattern for incorporating that documentation into the initial prompt. Our goal is to determine if this approach will reduce the likelihood of the LLM experiencing hallucinations.
 
 # Code Validation/Compilation
+Code compilation and validation is an area where we can help improve the user output of the LLM. By taking the generated code and sending it through a compiler we can validate the code and any errors produced can be sent back through the LLM to be fixed 
 
 # Linting
+- TODO - Some DSLs have linting rules that assist with syntax errors, style issues, and programming errors. Linters offer feedback on these issues and help maintain a consistent coding style. In the semantic flow, it would be ideal to incorporate a linting step to ensure that formatting is adhered to when suggesting code samples.
 
 # Feedback loop and documented examples
 - TODO - One area where we believe we can enhance context with higher quality is by enabling users to rate responses and storing them in a database. These ratings can then be fed back into the Language Model’s (LLM) context, improving its performance over time.
