@@ -37,7 +37,7 @@ When working with large language models like GPT-4, designing a prompt is a crit
 The system prompt is used to ground the Language Model (LLM) around the DSL (Domain-Specific Language). During our testing, we discovered that providing a grammar file and a few well-documented examples assists the LLM in generating an initial pass at code generation, but still causes the LLM to hallucinate. We are currently in the process of testing code documentation and the RAG (Rating, Annotation, and Guidance) pattern for incorporating that documentation into the initial prompt. Our goal is to determine if this approach will reduce the likelihood of the LLM experiencing hallucinations.
 
 # Code Validation/Compilation
-Code compilation and validation is an area where we can help improve the user output of the LLM. By taking the generated code and sending it through a compiler we can validate the code and any errors produced can be sent back through the LLM to be fixed 
+Code compilation and validation is an area where we can enhance the quality of LLM-generated output. By taking the generated code and sending it through a compiler, we can validate the code produced. Any errors from the compiler can then be sent back through the LLM for correction. Additionally, retaining these errors in the history helps ground the LLM, preventing similar mistakes as more questions are asked in the same chat.
 
 # Linting
 - TODO - Some DSLs have linting rules that assist with syntax errors, style issues, and programming errors. Linters offer feedback on these issues and help maintain a consistent coding style. In the semantic flow, it would be ideal to incorporate a linting step to ensure that formatting is adhered to when suggesting code samples.
