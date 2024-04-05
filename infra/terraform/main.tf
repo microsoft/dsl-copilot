@@ -16,7 +16,7 @@ provider "azurerm" {
 }
 
 resource "azurerm_resource_group" "resource_group" {
-  name     = "rg-spoke-test-${local.suffix}"
+  name     = "rg-${var.prefix}-${local.suffix}"
   location = "East US"
 }
 
