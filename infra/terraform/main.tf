@@ -61,7 +61,7 @@ module "openai" {
   openai_model_version      = var.openai_model_version
   virtual_network_id        = module.networking.virtual_network_id
   virtual_network_name      = module.networking.virtual_network_name
-  subnet_address_prefix     = var.openai_sku
+  subnet_address_prefix     = var.openai_subnet_address_space
 
   depends_on = [ 
     module.networking 
