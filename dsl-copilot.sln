@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceDefaults", "src\Serv
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHost", "src\AppHost\AppHost.csproj", "{9D44AA65-E36A-4E38-B411-5D5B4009BEC4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Web", "src\Web\Web.csproj", "{67E418C4-1B62-4C2C-92E9-513E06122026}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Web", "src\Web\DslCopilot.Web.csproj", "{67E418C4-1B62-4C2C-92E9-513E06122026}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
