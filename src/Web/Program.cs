@@ -1,5 +1,8 @@
-using Web;
-using Web.Components;
+using DslCopilot.Web.KernelHelpers;
+using DslCopilot.Web.Options;
+using DslCopilot.Web.Services;
+using DslCopilot.Web;
+using DslCopilot.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,12 +15,21 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddOutputCache();
 
-builder.Services.AddHttpClient<WeatherApiClient>(client =>
-    {
-        // This URL uses "https+http://" to indicate HTTPS is preferred over HTTP.
-        // Learn more about service discovery scheme resolution at https://aka.ms/dotnet/sdschemes.
-        client.BaseAddress = new("https+http://apiservice");
-    });
+
+builder.Services.Configure<AzureOpenAIOptions>(
+  builder.Configuration.GetSection("AzureOpenAI"));
+builder.Services.Configure<LanguageBlobServiceOptions>(
+   builder.Configuration.GetSection("LanguageBlobService"));
+
+builder.Services.AddSingleton<LanguageService>();
+builder.Services.AddSingleton<ChatSessionService>();
+
+// Chat history should be scoped, since we want one per user session.
+builder.Services.AddScoped<DslAIService>();
+builder.Services.AddScoped<ChatSessionIdService>();
+
+builder.Services.AddKernelWithCodeGenFilters(builder.Configuration.GetSection("AzureOpenAI").Get<AzureOpenAIOptions>());
+
 
 var app = builder.Build();
 

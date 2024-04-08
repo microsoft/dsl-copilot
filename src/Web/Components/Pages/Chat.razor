@@ -1,0 +1,99 @@
+﻿@page "/chat"
+@rendermode InteractiveServer
+@using DslCopilot.Web.Services
+@using DslCopilot.Web.Data
+@inject DslAIService AIService
+@inject LanguageService LanguageService
+@implements IDisposable
+
+<h3>Chat</h3>
+
+<div style="display: flex; flex-direction: column-reverse;">
+ @foreach (var msg in chatMessages.Reverse())
+{
+    <div style="display: flex; flex-direction: column">
+        @((MarkupString)msg.Response)
+    </div>
+    <div style="background-color: lightblue; margin-left: auto; max-width: 70%; padding: 10px;">@msg.Message (@msg.SelectedLanguage)</div>
+}
+</div>
+
+<div style="visibility: @SpinnerVisibility">
+  <div class="spinner-border" role="status">
+    <span class="sr-only"></span>
+  </div>
+</div>
+<div>
+    <input style="width: 400px" type="text" @bind="@message" @onkeyup="CheckForEnter" />
+</div>
+<LanguageSelector OnLanguageChanged="OnLanguageChanged" />
+
+@code {
+  private string message = string.Empty;
+  private IList<ChatMessage> chatMessages = new List<ChatMessage>();
+
+  private string selectedLanguage = "(none)";
+
+  private string SpinnerVisibility = "hidden";
+
+  private CancellationTokenSource _cts = new();
+
+  private DslDef MyDsl = new DslDef
+    {
+      Name = "MyDsl"
+    };
+
+
+  private async Task OnLanguageChanged(string language)
+  {
+    selectedLanguage = language;
+    var grammarFile = await LanguageService.GetGrammarForLanguage(selectedLanguage);
+    MyDsl.AntlrDef = grammarFile;
+  }
+
+  private async Task CheckForEnter(KeyboardEventArgs e)
+  {
+    if (e.Key == "Enter")
+    {
+      await SendMessage();
+    }
+  }
+
+  private async Task SendMessage()
+  {
+
+    var newMessage = new ChatMessage()
+      {
+        Message = message,
+        Response = string.Empty,
+        SelectedLanguage = selectedLanguage
+      };
+
+    chatMessages.Add(newMessage);
+
+    // Clear the input field
+    message = string.Empty;
+
+    // Call DslAIService to send chat message
+    SpinnerVisibility = "visible";
+    var response = await AIService.AskAI(newMessage.Message, MyDsl.AntlrDef, _cts.Token);
+    newMessage.Response = Markdig.Markdown.ToHtml(response);
+
+    // await foreach (var chunk in response)
+    // {
+    //   responseString += chunk;
+    //   newMessage.Response = Markdig.Markdown.ToHtml(responseString);
+    //   await InvokeAsync(StateHasChanged);
+    // }
+
+    SpinnerVisibility = "hidden";
+    await InvokeAsync(StateHasChanged);
+
+  }
+
+  public void Dispose()
+  {
+    _cts.Cancel();
+    _cts.Dispose();
+  }
+}

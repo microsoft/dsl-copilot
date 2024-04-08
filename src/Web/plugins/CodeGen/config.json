@@ -1,0 +1,32 @@
+{
+    "schema": 1,
+    "type": "completion",
+    "description": "Generate code from a user prompt in a given language",
+    "completion": {
+        "max_tokens": 256,
+        "temperature": 0,
+        "top_p": 0,
+        "presence_penalty": 0,
+        "frequency_penalty": 0
+    },
+    "input": {
+        "parameters": [
+            {
+                "name": "input",
+                "description": "A plain-language request which you should use to generate code.",
+                "defaultValue": ""
+            },
+            {
+                "name": "language",
+                "description": "The language to generate code in",
+                "defaultValue": "csharp"
+            },
+            {
+                "name": "history",
+                "description": "The chat history to use for context",
+                "defaultValue": ""
+            }
+        ]
+    },
+    "default_backends": []
+}

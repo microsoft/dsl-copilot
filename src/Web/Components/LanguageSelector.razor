@@ -1,0 +1,33 @@
+﻿@using DslCopilot.Web.Services
+@inject LanguageService LanguageService
+
+<label><b>Language:</b></label>
+<select class="form-control" id="languageSelector" @onchange="ChangeLanguage">
+    @foreach (var language in Languages)
+    {
+        <option value="@language">@language</option>
+    }
+</select>
+
+@code {
+
+  [Parameter]
+  public EventCallback<string> OnLanguageChanged { get; set; }
+
+  private List<string> Languages = new List<string>();
+  string SelectedLanguage { get; set; }
+
+  protected override async Task OnInitializedAsync()
+  {
+    Languages = await LanguageService.GetSupportedLanguages();
+    SelectedLanguage = Languages[0];
+    await OnLanguageChanged.InvokeAsync(SelectedLanguage);
+    await base.OnInitializedAsync();
+  }
+
+  private void ChangeLanguage(ChangeEventArgs e)
+  {
+      SelectedLanguage = e.Value.ToString();
+      OnLanguageChanged.InvokeAsync(SelectedLanguage);
+  }
+}
