@@ -1,7 +1,6 @@
 using DslCopilot.Web.KernelHelpers;
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
-using DslCopilot.Web;
 using DslCopilot.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);

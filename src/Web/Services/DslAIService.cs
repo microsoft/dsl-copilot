@@ -1,22 +1,18 @@
-﻿using DslCopilot.Web.Options;
-using Markdig.Helpers;
-using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel;
+﻿using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Plugins.Core;
 
 namespace DslCopilot.Web.Services
 {
-  public class DslAIService
+    public class DslAIService
   {
 
-    Kernel _kernel;
+        readonly Kernel _kernel;
 
-    ChatSessionIdService _chatSessionIdService;
-    ChatSessionService _chatSessionService;
-    IChatCompletionService _chatCompletionService;
-    OpenAIPromptExecutionSettings _executionSettings;
+        readonly ChatSessionIdService _chatSessionIdService;
+        readonly ChatSessionService _chatSessionService;
+        readonly IChatCompletionService _chatCompletionService;
+        readonly OpenAIPromptExecutionSettings _executionSettings;
 
     public DslAIService(
       Kernel kernel, 

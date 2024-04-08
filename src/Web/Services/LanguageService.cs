@@ -12,7 +12,7 @@ namespace DslCopilot.Web.Services
     private readonly BlobServiceClient _blobServiceClient;
     private readonly BlobContainerClient _blobContainerClient;
 
-    private Dictionary<string, string> _cachedGrammars;
+    private readonly Dictionary<string, string> _cachedGrammars;
 
     public LanguageService(IOptions<LanguageBlobServiceOptions> blobServiceOptions)
     {

@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -8,7 +7,7 @@ using static System.Environment;
 namespace DslCopilot.Web.Validators
 {
 
-  public static class CSharpCodeValidator
+    public static class CSharpCodeValidator
   {
     public static CodeValidationResult ValidateCode(string input)
     {

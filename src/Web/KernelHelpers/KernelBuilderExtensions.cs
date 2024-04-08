@@ -1,17 +1,15 @@
 ﻿using DslCopilot.Web.FunctionFilters;
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
 
 namespace DslCopilot.Web.KernelHelpers
 {
-  public static class KernelBuilderExtensions
+    public static class KernelBuilderExtensions
   {
     public static void AddKernelWithCodeGenFilters(this IServiceCollection services, AzureOpenAIOptions? openAiOptions)
     {
-
       if (openAiOptions == null)
       {
         throw new ArgumentNullException(nameof(openAiOptions));
