@@ -4,6 +4,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using DslCopilot.Web.Options;
 using Microsoft.Extensions.Options;
+using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.Services
 {
@@ -16,45 +17,32 @@ namespace DslCopilot.Web.Services
 
     public LanguageService(IOptions<LanguageBlobServiceOptions> blobServiceOptions)
     {
-
-      if (blobServiceOptions.Value.AccountName == null)
-      {
-        throw new ArgumentNullException(nameof(blobServiceOptions.Value.AccountName));
-      }
-
-      if (blobServiceOptions.Value.AccessKey == null)
-      {
-        throw new ArgumentNullException(nameof(blobServiceOptions.Value.AccessKey));
-      }
-
-      if (blobServiceOptions.Value.ContainerName == null)
-      {
-        throw new ArgumentNullException(nameof(blobServiceOptions.Value.ContainerName));
-      }
+      Guard.IsNotNull(blobServiceOptions, nameof(blobServiceOptions));
+      Guard.IsNotNull(blobServiceOptions.Value, nameof(blobServiceOptions.Value));
+      var value = blobServiceOptions.Value;
+      Guard.IsNotNull(value.AccountName, nameof(value.AccountName));
+      Guard.IsNotNull(value.AccessKey, nameof(value.AccessKey));
+      Guard.IsNotNull(value.ContainerName, nameof(value.ContainerName));
 
       StorageSharedKeyCredential storageSharedKeyCredential =
-        new StorageSharedKeyCredential(
-          blobServiceOptions.Value.AccountName,
-          blobServiceOptions.Value.AccessKey);
+        new(value.AccountName,
+          value.AccessKey);
 
-      string blobServiceEndpoint = $"https://{blobServiceOptions.Value.AccountName}.blob.core.windows.net";
+      string blobServiceEndpoint = $"https://{value.AccountName}.blob.core.windows.net";
 
       _blobServiceClient = new BlobServiceClient(new Uri(blobServiceEndpoint), storageSharedKeyCredential);
-
-      _blobContainerClient = _blobServiceClient.GetBlobContainerClient(blobServiceOptions.Value.ContainerName);
-
-      _cachedGrammars = new Dictionary<string, string>();
+      _blobContainerClient = _blobServiceClient.GetBlobContainerClient(value.ContainerName);
+      _cachedGrammars = [];
     }
 
     // The supported languages will be the "folders" at the top tier of the blob container
     public async Task<List<string>> GetSupportedLanguages()
     {
-      List<string> languages = new List<string>();
+      List<string> languages = [];
 
       try
       {
         var resultSegment = _blobContainerClient.GetBlobsByHierarchyAsync(delimiter: "/").AsPages();
-
         await foreach (Page<BlobHierarchyItem> page in resultSegment)
         {
           foreach (BlobHierarchyItem blobItem in page.Values)
@@ -69,6 +57,7 @@ namespace DslCopilot.Web.Services
       }
       catch (RequestFailedException e)
       {
+        //TODO: log this error
         Console.WriteLine(e.Message);
         throw;
       }
@@ -81,16 +70,16 @@ namespace DslCopilot.Web.Services
     {
       string resultString = string.Empty;
 
-      if (_cachedGrammars.ContainsKey(language))
+      if (_cachedGrammars.TryGetValue(language, out string? value))
       {
-        return _cachedGrammars[language];
+        return value;
       }
 
       try
       {
-        var resultSegment = _blobContainerClient.GetBlobsByHierarchyAsync(prefix: language + "/", delimiter:"/").AsPages();
+        var resultSegment = _blobContainerClient.GetBlobsByHierarchyAsync(prefix: language + "/", delimiter: "/").AsPages();
 
-        await foreach(Page<BlobHierarchyItem> page in resultSegment)
+        await foreach (Page<BlobHierarchyItem> page in resultSegment)
         {
           foreach (BlobHierarchyItem blobItem in page.Values)
           {
@@ -108,15 +97,15 @@ namespace DslCopilot.Web.Services
 
         _cachedGrammars.Add(language, resultString);
 
-      } catch (RequestFailedException e)
+      }
+      catch (RequestFailedException e)
       {
+        //TODO: log this error
         Console.WriteLine(e.Message);
         throw;
       }
 
       return resultString;
     }
-
-
   }
 }

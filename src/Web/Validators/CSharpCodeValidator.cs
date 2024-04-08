@@ -6,31 +6,30 @@ using static System.Environment;
 
 namespace DslCopilot.Web.Validators
 {
-
-    public static class CSharpCodeValidator
+  public static class CSharpCodeValidator
   {
     public static CodeValidationResult ValidateCode(string input)
     {
-      CodeValidationResult? result = null;
+      CodeValidationResult? result;
       try
       {
         result = ValidateCSharpCode(input);
       }
       catch (Exception ex)
       {
-        result = new CodeValidationResult();
-        result.IsValid = false;
-        result.Errors.Add(ex.Message);
+        result = new CodeValidationResult
+        {
+          IsValid = false,
+          Errors = [ex.Message]
+        };
       }
-
       return result;
     }
 
     private static CodeValidationResult ValidateCSharpCode(string code)
     {
-      CodeValidationResult result = new CodeValidationResult();
+      CodeValidationResult result = new();
       code = code.ReplaceLineEndings(NewLine);
-      //ConsoleAnnotator.WriteLine($"code_validation:{NewLine}{code}{NewLine}", ConsoleColor.DarkBlue);
       SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(code);
       var thisAssembly = typeof(CSharpCodeValidator).Assembly;
       var referencedAssemblies = thisAssembly.GetReferencedAssemblies()

@@ -1,40 +1,16 @@
 ﻿using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 namespace DslCopilot.Web.Services
 {
-    public class DslAIService
+  public class DslAIService(
+    Kernel kernel,
+    ChatSessionIdService chatSessionIdService,
+    ChatSessionService chatSessionService)
   {
-
-        readonly Kernel _kernel;
-
-        readonly ChatSessionIdService _chatSessionIdService;
-        readonly ChatSessionService _chatSessionService;
-        readonly IChatCompletionService _chatCompletionService;
-        readonly OpenAIPromptExecutionSettings _executionSettings;
-
-    public DslAIService(
-      Kernel kernel, 
-      ChatSessionIdService chatSessionIdService,
-      ChatSessionService chatSessionService)
-    {
-      _kernel = kernel;
-      _chatSessionIdService = chatSessionIdService;
-      _chatSessionService = chatSessionService;
-
-      _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
-
-      _executionSettings = new OpenAIPromptExecutionSettings()
-      {
-        ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
-      };
-    }
-
     public async Task<string> AskAI(string userMessage, string antlrDef, CancellationToken cancellationToken)
     {
-      var chatSessionId = _chatSessionIdService.GetChatSessionId();
-      var chatHistory = _chatSessionService.GetChatSession(chatSessionId);
+      var chatSessionId = chatSessionIdService.GetChatSessionId();
+      var chatHistory = chatSessionService.GetChatSession(chatSessionId);
 
       var operationId = Guid.NewGuid().ToString();
 
@@ -44,12 +20,10 @@ namespace DslCopilot.Web.Services
       }
 
       chatHistory.AddUserMessage(userMessage);
-      _kernel.Data["chatSessionId"] = chatSessionId;
-      _kernel.Data["operationId"] = operationId;
+      kernel.Data["chatSessionId"] = chatSessionId;
+      kernel.Data["operationId"] = operationId;
 
-      //var result = _chatCompletionService.GetStreamingChatMessageContentsAsync(chatHistory, _executionSettings);
-
-      var result = await _kernel.InvokeAsync("plugins", "CodeGen", new()
+      var result = await kernel.InvokeAsync("plugins", "CodeGen", new()
       {
         { "input", userMessage },
         { "history", string.Join(Environment.NewLine, chatHistory) },

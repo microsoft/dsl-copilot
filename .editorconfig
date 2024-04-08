@@ -2,3 +2,9 @@
 
 # SKEXP0001: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 dotnet_diagnostic.SKEXP0001.severity = none
+
+# IDE0058: Expression value is never used
+dotnet_diagnostic.IDE0058.severity = none
+
+# SKEXP0050: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+dotnet_diagnostic.SKEXP0050.severity = none

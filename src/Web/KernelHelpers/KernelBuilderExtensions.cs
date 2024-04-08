@@ -3,35 +3,20 @@ using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
+using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.KernelHelpers
 {
-    public static class KernelBuilderExtensions
+  public static class KernelBuilderExtensions
   {
     public static void AddKernelWithCodeGenFilters(this IServiceCollection services, AzureOpenAIOptions? openAiOptions)
     {
-      if (openAiOptions == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions));
-      }
-
-      if (openAiOptions.CompletionDeploymentName == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions.CompletionDeploymentName));
-      }
-
-      if (openAiOptions.Endpoint == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions.Endpoint));
-      }
-
-      if (openAiOptions.ApiKey == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions.ApiKey));
-      }
+      ArgumentNullException.ThrowIfNull(openAiOptions);
+      Guard.IsNotNull(openAiOptions.CompletionDeploymentName, nameof(openAiOptions.CompletionDeploymentName));
+      Guard.IsNotNull(openAiOptions.Endpoint, nameof(openAiOptions.Endpoint));
+      Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
 
       var kernelBuilder = Kernel.CreateBuilder();
-
       kernelBuilder.AddAzureOpenAIChatCompletion(
           deploymentName: openAiOptions.CompletionDeploymentName,
           endpoint: openAiOptions.Endpoint,
@@ -40,16 +25,12 @@ namespace DslCopilot.Web.KernelHelpers
 
       kernelBuilder.Services.AddSingleton<ChatSessionService>();
 
-#pragma warning disable SKEXP0050 // Experimental API
-      kernelBuilder.Plugins.AddFromType<ConversationSummaryPlugin>();
-      kernelBuilder.Plugins.AddFromPromptDirectory("plugins");
-#pragma warning restore SKEXP0050 // Experimental API
-
+      kernelBuilder.Plugins
+        .AddFromType<ConversationSummaryPlugin>()
+        .AddFromPromptDirectory("plugins");
 
       var kernel = kernelBuilder.Build();
-#pragma warning disable SKEXP0001 // Experimental API
       kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(kernel.GetRequiredService<ChatSessionService>(), kernel));
-#pragma warning restore SKEXP0001 // Experimental API
 
       services.AddTransient(_ => kernel);
     }
