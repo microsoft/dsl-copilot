@@ -9,7 +9,7 @@ namespace DslCopilot.Web.KernelHelpers
 {
   public static class KernelBuilderExtensions
   {
-    public static void AddKernelWithCodeGenFilters(this IServiceCollection services, AzureOpenAIOptions? openAiOptions)
+    public static void AddKernelWithCodeGenFilters(this IServiceCollection services, ChatSessionService chatSessionService, AzureOpenAIOptions? openAiOptions)
     {
 
       if (openAiOptions == null)
@@ -40,8 +40,6 @@ namespace DslCopilot.Web.KernelHelpers
           apiKey: openAiOptions.ApiKey
       );
 
-      kernelBuilder.Services.AddSingleton<ChatSessionService>();
-
 #pragma warning disable SKEXP0050 // Experimental API
       kernelBuilder.Plugins.AddFromType<ConversationSummaryPlugin>();
       kernelBuilder.Plugins.AddFromPromptDirectory("plugins");
@@ -50,7 +48,7 @@ namespace DslCopilot.Web.KernelHelpers
 
       var kernel = kernelBuilder.Build();
 #pragma warning disable SKEXP0001 // Experimental API
-      kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(kernel.GetRequiredService<ChatSessionService>(), kernel));
+      kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, kernel));
 #pragma warning restore SKEXP0001 // Experimental API
 
       services.AddTransient(_ => kernel);
