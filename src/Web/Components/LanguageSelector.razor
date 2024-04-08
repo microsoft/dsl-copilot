@@ -15,19 +15,29 @@
   public EventCallback<string> OnLanguageChanged { get; set; }
 
   private List<string> Languages = new List<string>();
-  string SelectedLanguage { get; set; }
+
+  private string _selectedLanguage = string.Empty;
+  private string SelectedLanguage { 
+    get
+    {
+      return _selectedLanguage;
+    }
+    set
+    {
+        _selectedLanguage = value;
+        OnLanguageChanged.InvokeAsync(_selectedLanguage);
+    }
+  }
 
   protected override async Task OnInitializedAsync()
   {
     Languages = await LanguageService.GetSupportedLanguages();
     SelectedLanguage = Languages[0];
-    await OnLanguageChanged.InvokeAsync(SelectedLanguage);
     await base.OnInitializedAsync();
   }
 
   private void ChangeLanguage(ChangeEventArgs e)
   {
-      SelectedLanguage = e.Value.ToString();
-      OnLanguageChanged.InvokeAsync(SelectedLanguage);
+      SelectedLanguage = e.Value?.ToString() ?? string.Empty;
   }
 }
