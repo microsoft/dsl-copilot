@@ -9,19 +9,38 @@ namespace DslCopilot.Web.KernelHelpers
 {
   public static class KernelBuilderExtensions
   {
-    public static void AddKernelWithCodeGenFilters(this IServiceCollection services, AzureOpenAIOptions openAiOptions)
+    public static void AddKernelWithCodeGenFilters(this IServiceCollection services, AzureOpenAIOptions? openAiOptions)
     {
+
+      if (openAiOptions == null)
+      {
+        throw new ArgumentNullException(nameof(openAiOptions));
+      }
+
+      if (openAiOptions.CompletionDeploymentName == null)
+      {
+        throw new ArgumentNullException(nameof(openAiOptions.CompletionDeploymentName));
+      }
+
+      if (openAiOptions.Endpoint == null)
+      {
+        throw new ArgumentNullException(nameof(openAiOptions.Endpoint));
+      }
+
+      if (openAiOptions.ApiKey == null)
+      {
+        throw new ArgumentNullException(nameof(openAiOptions.ApiKey));
+      }
+
       var kernelBuilder = Kernel.CreateBuilder();
 
-    kernelBuilder.AddAzureOpenAIChatCompletion(
-        deploymentName: openAiOptions.CompletionDeploymentName,
-        endpoint: openAiOptions.Endpoint,
-        apiKey: openAiOptions.ApiKey
-    );
+      kernelBuilder.AddAzureOpenAIChatCompletion(
+          deploymentName: openAiOptions.CompletionDeploymentName,
+          endpoint: openAiOptions.Endpoint,
+          apiKey: openAiOptions.ApiKey
+      );
 
-    //var kernel = kernelBuilder.Build();
-    //kernelBuilder.Services.AddTransient(_ => kernel);
-    kernelBuilder.Services.AddSingleton<ChatSessionService>();
+      kernelBuilder.Services.AddSingleton<ChatSessionService>();
 
 #pragma warning disable SKEXP0050 // Experimental API
       kernelBuilder.Plugins.AddFromType<ConversationSummaryPlugin>();

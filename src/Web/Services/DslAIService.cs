@@ -61,7 +61,7 @@ namespace DslCopilot.Web.Services
         { "operationId", operationId }
       }, cancellationToken);
 
-      return result.GetValue<string>();
+      return result.GetValue<string>() ?? string.Empty;
     }
   }
 }

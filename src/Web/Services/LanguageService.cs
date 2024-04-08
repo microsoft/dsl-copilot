@@ -16,6 +16,22 @@ namespace DslCopilot.Web.Services
 
     public LanguageService(IOptions<LanguageBlobServiceOptions> blobServiceOptions)
     {
+
+      if (blobServiceOptions.Value.AccountName == null)
+      {
+        throw new ArgumentNullException(nameof(blobServiceOptions.Value.AccountName));
+      }
+
+      if (blobServiceOptions.Value.AccessKey == null)
+      {
+        throw new ArgumentNullException(nameof(blobServiceOptions.Value.AccessKey));
+      }
+
+      if (blobServiceOptions.Value.ContainerName == null)
+      {
+        throw new ArgumentNullException(nameof(blobServiceOptions.Value.ContainerName));
+      }
+
       StorageSharedKeyCredential storageSharedKeyCredential =
         new StorageSharedKeyCredential(
           blobServiceOptions.Value.AccountName,
