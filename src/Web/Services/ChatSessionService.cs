@@ -7,7 +7,7 @@ public class ChatSessionService
 
   public ChatHistory GetChatSession(string sessionId)
   {
-    if (!_chatSessions.TryGetValue(sessionId, out ChatHistory? _))
+    if (!_chatSessions.TryGetValue(sessionId, out var _))
     {
       _chatSessions[sessionId] = [];
     }

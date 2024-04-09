@@ -28,11 +28,10 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Kern
       return;
     }
 
-    var chatSession = chatSessionService.GetChatSession(chatSessionId);
-
     var code = context.Result.GetValue<string>();
     if (string.IsNullOrEmpty(code))
     {
+      //TODO: Consider this an error?
       return;
     }
 
@@ -43,6 +42,7 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Kern
       _numRetries[operationId] += 1;
       if (_numRetries[operationId] < MAX_RETRIES)
       {
+        var chatSession = chatSessionService.GetChatSession(chatSessionId);
         chatSession.AddUserMessage("Unfortunately, this code contains the following errors:");
         foreach (var error in result.Errors)
         {

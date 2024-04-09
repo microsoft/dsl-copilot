@@ -63,9 +63,9 @@ public class LanguageService
   // The grammar file will be an ANTLR (.g4) file in the language folder
   public async Task<string> GetGrammarForLanguage(string language)
   {
-    string resultString = string.Empty;
+    var resultString = string.Empty;
 
-    if (_cachedGrammars.TryGetValue(language, out string? value))
+    if (_cachedGrammars.TryGetValue(language, out var value))
     {
       return value;
     }

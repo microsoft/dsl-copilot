@@ -22,10 +22,12 @@ public class DslAIService(
     kernel.Data["chatSessionId"] = chatSessionId;
     kernel.Data["operationId"] = operationId;
 
-    var result = await kernel.InvokeAsync("plugins", "CodeGen", new()
+    var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
       {
         { "input", userMessage },
         { "history", string.Join(Environment.NewLine, chatHistory) },
+        { "grammar", antlrDef },
+        { "fewShotExamples", await File.ReadAllLinesAsync("examples/csharp.md", cancellationToken) },
         { "chatSessionId", chatSessionId },
         { "operationId", operationId }
       }, cancellationToken);
