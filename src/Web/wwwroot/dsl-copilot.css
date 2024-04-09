@@ -27,6 +27,7 @@
 }
 
 .chat-input {
+    border-radius: 5px / 5px;
     background-color: lightblue;
     margin-left: auto;
     max-width: 70%;
