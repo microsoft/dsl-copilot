@@ -1,29 +1,28 @@
 ﻿using Microsoft.SemanticKernel;
 
-namespace DslCopilot.Web.Services
+namespace DslCopilot.Web.Services;
+public class DslAIService(
+  Kernel kernel,
+  ChatSessionIdService chatSessionIdService,
+  ChatSessionService chatSessionService)
 {
-  public class DslAIService(
-    Kernel kernel,
-    ChatSessionIdService chatSessionIdService,
-    ChatSessionService chatSessionService)
+  public async Task<string> AskAI(string userMessage, string antlrDef, CancellationToken cancellationToken)
   {
-    public async Task<string> AskAI(string userMessage, string antlrDef, CancellationToken cancellationToken)
+    var chatSessionId = chatSessionIdService.GetChatSessionId();
+    var chatHistory = chatSessionService.GetChatSession(chatSessionId);
+
+    var operationId = Guid.NewGuid().ToString();
+
+    if (chatHistory.Count == 0)
     {
-      var chatSessionId = chatSessionIdService.GetChatSessionId();
-      var chatHistory = chatSessionService.GetChatSession(chatSessionId);
+      chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given ANTLR grammar.  You only respond with code, and you only respond with code that conforms to this grammar: {antlrDef}");
+    }
 
-      var operationId = Guid.NewGuid().ToString();
+    chatHistory.AddUserMessage(userMessage);
+    kernel.Data["chatSessionId"] = chatSessionId;
+    kernel.Data["operationId"] = operationId;
 
-      if (chatHistory.Count == 0)
-      {
-        chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given ANTLR grammar.  You only respond with code, and you only respond with code that conforms to this grammar: {antlrDef}");
-      }
-
-      chatHistory.AddUserMessage(userMessage);
-      kernel.Data["chatSessionId"] = chatSessionId;
-      kernel.Data["operationId"] = operationId;
-
-      var result = await kernel.InvokeAsync("plugins", "CodeGen", new()
+    var result = await kernel.InvokeAsync("plugins", "CodeGen", new()
       {
         { "input", userMessage },
         { "history", string.Join(Environment.NewLine, chatHistory) },
@@ -31,7 +30,6 @@ namespace DslCopilot.Web.Services
         { "operationId", operationId }
       }, cancellationToken);
 
-      return result.GetValue<string>() ?? string.Empty;
-    }
+    return result.GetValue<string>() ?? string.Empty;
   }
 }
