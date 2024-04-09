@@ -8,13 +8,13 @@
 
 <h3>DSL Copilot Chat</h3>
 
-<div style="display: flex; flex-direction: column-reverse;">
+<div class="chat-container">
  @foreach (var msg in chatMessages.Reverse())
 {
-    <div style="display: flex; flex-direction: column">
+    <div class="chat-response">
         @((MarkupString)msg.Response)
     </div>
-    <div style="background-color: lightblue; margin-left: auto; max-width: 70%; padding: 10px;">@msg.Message (@msg.SelectedLanguage)</div>
+    <div class="chat-input">@msg.Message (@msg.SelectedLanguage)</div>
 }
 </div>
 <Console />

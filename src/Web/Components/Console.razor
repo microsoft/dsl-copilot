@@ -3,11 +3,11 @@
 @inject ChatSessionIdService ChatSessionIdService
 @implements IDisposable
 
-<div style="background-color:black">
+<div class="console-container">
 @foreach(var line in ConsoleLines)
 {
-    <div style="color:white">@line</div>
-})
+    <div class="console-text">@line</div>
+}
 </div>
 @code {
   private IList<string> ConsoleLines = new List<string>();
