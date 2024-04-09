@@ -11,15 +11,17 @@ namespace DslCopilot.Web.FunctionFilters
   {
 
     private ChatSessionService _chatSessionService;
+    private ConsoleService _consoleService;
     private Dictionary<string, int> _numRetries = new();
     private Kernel _kernel;
 
     private const int MAX_RETRIES = 3;
 
-    public CodeRetryFunctionFilter(ChatSessionService chatSessionService, Kernel kernel)
+    public CodeRetryFunctionFilter(ChatSessionService chatSessionService, ConsoleService consoleService, Kernel kernel)
     {
       _kernel = kernel;
       _chatSessionService = chatSessionService;
+      _consoleService = consoleService;
     }
 
     public void OnFunctionInvoked(FunctionInvokedContext context)
@@ -49,7 +51,10 @@ namespace DslCopilot.Web.FunctionFilters
         return;
       }
 
+      _consoleService.WriteToConsole(chatSessionId, $"Generated code: {code}");
+
       var result = CSharpCodeValidator.ValidateCode(code);
+
 
       if (!result.IsValid)
       {
@@ -59,8 +64,13 @@ namespace DslCopilot.Web.FunctionFilters
         }
         
         _numRetries[operationId] += 1;
+
+        _consoleService.WriteToConsole(chatSessionId, $"Code generation had errors. Errors: {string.Join(Environment.NewLine, result.Errors)}");
+        _consoleService.WriteToConsole(chatSessionId, $"Retrying... (Attempt {_numRetries[operationId]})");
+
         if (_numRetries[operationId] < MAX_RETRIES)
         {
+
           chatSession.AddUserMessage("Unfortunately, this code contains the following errors:");
           foreach (var error in result.Errors)
           {
@@ -78,6 +88,8 @@ namespace DslCopilot.Web.FunctionFilters
         }
         else
         {
+          _consoleService.WriteToConsole(chatSessionId, "Reached maximum number of retries. Displaying last response.");
+
           var errorResponse = $"{code}{Environment.NewLine}I'm sorry, but the code I could generate contains the following errors.  You'll need to correct them before using this code.";
           foreach (var error in result.Errors)
           {
@@ -91,7 +103,19 @@ namespace DslCopilot.Web.FunctionFilters
 
     public void OnFunctionInvoking(FunctionInvokingContext context)
     {
-      return;
+      if (context.Function.Name != "CodeGen")
+      {
+        return;
+      }
+
+      var chatSessionId = context.Arguments["chatSessionId"]?.ToString();
+      if (string.IsNullOrEmpty(chatSessionId))
+      {
+        return;
+      }
+
+      _consoleService.WriteToConsole(chatSessionId, "Running CodeGen Function.");
+
     }
   }
 #pragma warning restore SKEXP0001 // Experimental API

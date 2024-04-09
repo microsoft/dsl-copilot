@@ -9,7 +9,10 @@ namespace DslCopilot.Web.KernelHelpers
 {
   public static class KernelBuilderExtensions
   {
-    public static void AddKernelWithCodeGenFilters(this IServiceCollection services, ChatSessionService chatSessionService, AzureOpenAIOptions? openAiOptions)
+    public static void AddKernelWithCodeGenFilters(this IServiceCollection services, 
+      ConsoleService consoleService, 
+      ChatSessionService chatSessionService, 
+      AzureOpenAIOptions? openAiOptions)
     {
 
       if (openAiOptions == null)
@@ -48,7 +51,7 @@ namespace DslCopilot.Web.KernelHelpers
 
       var kernel = kernelBuilder.Build();
 #pragma warning disable SKEXP0001 // Experimental API
-      kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, kernel));
+      kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
 #pragma warning restore SKEXP0001 // Experimental API
 
       services.AddTransient(_ => kernel);
