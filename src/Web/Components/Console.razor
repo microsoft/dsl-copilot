@@ -3,10 +3,10 @@
 @inject ChatSessionIdService ChatSessionIdService
 @implements IDisposable
 
-<div style="display: flex; flex-direction: column-reverse; background-color:black">
+<div style="background-color:black">
 @foreach(var line in ConsoleLines)
 {
-    <div style="display: flex; flex-direction: column; color:white">@line</div>
+    <div style="color:white">@line</div>
 })
 </div>
 @code {
