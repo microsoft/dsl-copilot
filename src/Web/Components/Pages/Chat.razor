@@ -1,4 +1,4 @@
-﻿@page "/chat"
+﻿@page "/"
 @rendermode InteractiveServer
 @using DslCopilot.Web.Services
 @using DslCopilot.Web.Data
@@ -6,7 +6,7 @@
 @inject LanguageService LanguageService
 @implements IDisposable
 
-<h3>Chat</h3>
+<h3>DSL Copilot Chat</h3>
 
 <div style="display: flex; flex-direction: column-reverse;">
  @foreach (var msg in chatMessages.Reverse())
