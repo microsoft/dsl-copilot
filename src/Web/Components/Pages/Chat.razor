@@ -16,17 +16,17 @@
         </div>
     }
     </div>
-    <div class="user-input">
-      <div style="visibility: @SpinnerVisibility">
-          <div class="spinner-border" role="status">
-          <span class="sr-only"></span>
-          </div>
-      </div>
-      <div>
-          <input style="width: 400px" type="text" @bind="@message" @onkeyup="CheckForEnter" />
-      </div>
-      <LanguageSelector OnLanguageChanged="OnLanguageChanged" />
+</div>
+<div class="user-input">
+  <div style="visibility: @SpinnerVisibility">
+    <div class="spinner-border" role="status">
+      <span class="sr-only"></span>
     </div>
+  </div>
+  <div>
+    <input type="text" @bind="@message" @onkeyup="CheckForEnter" />
+  </div>
+  <LanguageSelector OnLanguageChanged="OnLanguageChanged" />
 </div>
 <Console />
 

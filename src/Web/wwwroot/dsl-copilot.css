@@ -1,24 +1,15 @@
 ﻿.chat-container {
-    position: fixed;
-    top: 0;
-    height: 60vh;
-    position: relative;
-    width: 100%;
-}
-
-.chat-messge-container {
-    position: absolute;
-    top: 0;
-    height: 50vh;
     display: flex;
     flex-direction: column-reverse;
-    background-color: lightgoldenrodyellow;
+    height: 50vh;
     overflow-y: scroll;
 }
 
+.chat-messge-container {
+    flex: 1;
+}
+
 .chat-response {
-    display: flex;
-    flex-direction: column;
     font-family: 'Cascadia Code', monospace;
     color: black;
 }
@@ -31,9 +22,8 @@
     padding: 10px;
 }
 
-.user-input {
-    position: absolute;
-    bottom: 0;
+div.user-input input[type="text"] {
+    width: 70%;
 }
 
 .console-container {
