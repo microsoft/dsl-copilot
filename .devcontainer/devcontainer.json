@@ -14,7 +14,7 @@
 	"postCreateCommand": [
 		"dotnet workload update",
 		"dotnet workload install aspire",
-		"dotnet dev-certs https"
+		"dotnet dev-certs https --trust"
 	],
 	"customizations": {
 		"vscode": {
