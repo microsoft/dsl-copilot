@@ -10,7 +10,9 @@ using Microsoft.Toolkit.Diagnostics;
 namespace DslCopilot.Web.KernelHelpers;
 public static class KernelBuilderExtensions
 {
-  public static void AddKernelWithCodeGenFilters(this IServiceCollection services, AzureOpenAIOptions? openAiOptions)
+  public static void AddKernelWithCodeGenFilters(this IServiceCollection services,
+    ChatSessionService chatSessionService,
+    AzureOpenAIOptions? openAiOptions)
   {
     ArgumentNullException.ThrowIfNull(openAiOptions);
     Guard.IsNotNull(openAiOptions.EmbeddingDeploymentName, nameof(openAiOptions.EmbeddingDeploymentName));
@@ -46,7 +48,6 @@ public static class KernelBuilderExtensions
     services.AddTransient(provider => memory);
     kernelBuilder.Services.AddTransient(provider => memory);
     kernelBuilder.Services.AddSingleton<ChatSessionService>();
-
     kernelBuilder.Plugins
       .AddFromType<ConversationSummaryPlugin>();
 
@@ -56,8 +57,7 @@ public static class KernelBuilderExtensions
         File.ReadAllText("plugins/generateCode.yaml")!,
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
-    kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(kernel.GetRequiredService<ChatSessionService>(), kernel));
-
+    kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, kernel));
     services.AddTransient(_ => kernel);
   }
 }
