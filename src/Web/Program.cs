@@ -41,7 +41,6 @@ builder.Services.AddScoped<ChatSessionIdService>();
 
 builder.Services.AddKernelWithCodeGenFilters(consoleService, chatSessionService, builder.Configuration.GetSection("AzureOpenAI").Get<AzureOpenAIOptions>());
 
-
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())

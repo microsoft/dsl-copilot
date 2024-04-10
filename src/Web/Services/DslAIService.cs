@@ -1,5 +1,4 @@
 ﻿using DslCopilot.Web.Options;
-using Markdig.Helpers;
 using Microsoft.Extensions.Options;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.ChatCompletion;

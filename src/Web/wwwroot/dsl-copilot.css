@@ -1,11 +1,49 @@
-﻿.console-container {
+﻿.chat-container {
+    position: fixed;
+    top: 0;
+    height: 60vh;
+    position: relative;
+    width: 100%;
+}
+
+.chat-messge-container {
+    position: absolute;
+    top: 0;
+    height: 50vh;
+    display: flex;
+    flex-direction: column-reverse;
+    background-color: lightgoldenrodyellow;
+    overflow-y: scroll;
+}
+
+.chat-response {
+    display: flex;
+    flex-direction: column;
+    font-family: 'Cascadia Code', monospace;
+    color: black;
+}
+
+.chat-input {
+    border-radius: 5px;
+    background-color: lightblue;
+    margin-left: auto;
+    max-width: 70%;
+    padding: 10px;
+}
+
+.user-input {
+    position: absolute;
+    bottom: 0;
+}
+
+.console-container {
     position: fixed;
     bottom: 0;
     left: 0;
+    height: 30vh;
     width: 100%;
-    height: 50vh; /* 50% of the viewport height */
     background-color: black;
-    overflow-y: scroll; /* Enable vertical scrolling */
+    overflow-y: scroll;
 }
 
 .console-text {
@@ -13,23 +51,6 @@
     font-size: 16px;
     line-height: 1.5;
     color: white;
-    font-family: 'Lucida Console'
+    font-family: 'Lucida Console', monospace;
 }
 
-.chat-container {
-    display: flex;
-    flex-direction: column-reverse;
-}
-
-.chat-response {
-    display: flex;
-    flex-direction: column;
-}
-
-.chat-input {
-    border-radius: 5px / 5px;
-    background-color: lightblue;
-    margin-left: auto;
-    max-width: 70%;
-    padding: 10px;
-}
