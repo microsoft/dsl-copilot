@@ -11,7 +11,7 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Kern
 
   public async void OnFunctionInvoked(FunctionInvokedContext context)
   {
-    if (context.Function.Name != "CodeGen")
+    if (context.Function.Name != "generateCode")
     {
       return;
     }
