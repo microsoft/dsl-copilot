@@ -1,4 +1,9 @@
-﻿.chat-container {
+﻿.app-title {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.chat-container {
     display: flex;
     flex-direction: column-reverse;
     height: 50vh;
@@ -42,5 +47,9 @@ div.user-input input[type="text"] {
     line-height: 1.5;
     color: white;
     font-family: 'Lucida Console', monospace;
+}
+
+.language-selector {
+    width: 50%;
 }
 

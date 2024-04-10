@@ -2,12 +2,14 @@
 @inject LanguageService LanguageService
 
 <label><b>Language:</b></label>
-<select class="form-control" id="languageSelector" @onchange="ChangeLanguage">
-    @foreach (var language in Languages)
-    {
-        <option value="@language">@language</option>
-    }
-</select>
+<div class="language-selector">
+    <select class="form-control" id="languageSelector" @onchange="ChangeLanguage">
+        @foreach (var language in Languages)
+        {
+            <option value="@language">@language</option>
+        }
+    </select>
+</div>
 
 @code {
 
