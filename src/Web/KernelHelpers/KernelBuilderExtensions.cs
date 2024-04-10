@@ -1,6 +1,7 @@
 ﻿using DslCopilot.Web.FunctionFilters;
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
 using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
@@ -12,10 +13,28 @@ public static class KernelBuilderExtensions
   public static void AddKernelWithCodeGenFilters(this IServiceCollection services, AzureOpenAIOptions? openAiOptions)
   {
     ArgumentNullException.ThrowIfNull(openAiOptions);
+    Guard.IsNotNull(openAiOptions.EmbeddingDeploymentName, nameof(openAiOptions.EmbeddingDeploymentName));
     Guard.IsNotNull(openAiOptions.CompletionDeploymentName, nameof(openAiOptions.CompletionDeploymentName));
     Guard.IsNotNull(openAiOptions.Endpoint, nameof(openAiOptions.Endpoint));
     Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
 
+    var memoryBuilder = new KernelMemoryBuilder();
+    memoryBuilder.WithAzureOpenAITextGeneration(new AzureOpenAIConfig
+    {
+        APIKey = openAiOptions.ApiKey,
+        APIType = AzureOpenAIConfig.APITypes.ChatCompletion,
+        Endpoint = openAiOptions.Endpoint,
+        Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+        Deployment = openAiOptions.CompletionDeploymentName
+    });
+    memoryBuilder.WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig
+    {
+        APIKey = openAiOptions.ApiKey,
+        APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+        Endpoint = openAiOptions.Endpoint,
+        Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+        Deployment = openAiOptions.EmbeddingDeploymentName
+    });
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
@@ -23,6 +42,9 @@ public static class KernelBuilderExtensions
         apiKey: openAiOptions.ApiKey
     );
 
+    var memory = memoryBuilder.Build();
+    services.AddTransient(provider => memory);
+    kernelBuilder.Services.AddTransient(provider => memory);
     kernelBuilder.Services.AddSingleton<ChatSessionService>();
 
     kernelBuilder.Plugins

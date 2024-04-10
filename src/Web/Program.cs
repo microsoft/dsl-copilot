@@ -27,8 +27,16 @@ builder.Services.AddSingleton<ChatSessionService>();
 builder.Services.AddScoped<DslAIService>();
 builder.Services.AddScoped<ChatSessionIdService>();
 
-builder.Services.AddKernelWithCodeGenFilters(builder.Configuration.GetSection("AzureOpenAI").Get<AzureOpenAIOptions>());
-
+var aiOptions = builder.Configuration
+    .SetBasePath("/")
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables()
+    .AddUserSecrets<AzureOpenAIOptions>(optional: true)
+    .Build()
+    .GetSection("AzureOpenAI")
+    .Get<AzureOpenAIOptions>()!;
+builder.Services.AddKernelWithCodeGenFilters(aiOptions);
 
 var app = builder.Build();
 

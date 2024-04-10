@@ -1,8 +1,10 @@
-﻿using Microsoft.SemanticKernel;
+﻿using Microsoft.KernelMemory;
+using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.Services;
 public class DslAIService(
   Kernel kernel,
+  IKernelMemory memory,
   ChatSessionIdService chatSessionIdService,
   ChatSessionService chatSessionService)
 {
@@ -22,16 +24,25 @@ public class DslAIService(
     kernel.Data["chatSessionId"] = chatSessionId;
     kernel.Data["operationId"] = operationId;
 
+    var fewShotExamples = await GetFewShotExamples(userMessage, cancellationToken);
     var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
       {
         { "input", userMessage },
         { "history", string.Join(Environment.NewLine, chatHistory) },
         { "grammar", antlrDef },
-        { "fewShotExamples", await File.ReadAllLinesAsync("examples/csharp.md", cancellationToken) },
+        { "fewShotExamples", fewShotExamples },
         { "chatSessionId", chatSessionId },
         { "operationId", operationId }
       }, cancellationToken);
 
     return result.GetValue<string>() ?? string.Empty;
+  }
+
+  private async Task<string> GetFewShotExamples(string input, CancellationToken cancellationToken)
+  {
+    IEnumerable<string?> examples = await File.ReadAllLinesAsync("examples/csharp.md", cancellationToken);
+    var memories = await memory.SearchAsync(input, limit: 3, cancellationToken: cancellationToken);
+    var results = examples.Concat([memories.ToString()]).Where(x => x != null).Cast<string>();
+    return string.Join(Environment.NewLine, results);
   }
 }
