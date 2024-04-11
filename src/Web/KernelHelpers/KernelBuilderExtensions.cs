@@ -11,6 +11,7 @@ namespace DslCopilot.Web.KernelHelpers;
 public static class KernelBuilderExtensions
 {
   public static void AddKernelWithCodeGenFilters(this IServiceCollection services,
+    ConsoleService consoleService, 
     ChatSessionService chatSessionService,
     AzureOpenAIOptions? openAiOptions)
   {
@@ -57,7 +58,7 @@ public static class KernelBuilderExtensions
         File.ReadAllText("plugins/generateCode.yaml")!,
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
-    kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, kernel));
+    kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
     services.AddTransient(_ => kernel);
   }
 }

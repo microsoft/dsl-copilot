@@ -1,4 +1,4 @@
-﻿@page "/chat"
+﻿@page "/"
 @rendermode InteractiveServer
 @using DslCopilot.Web.Services
 @using DslCopilot.Web.Data
@@ -6,27 +6,30 @@
 @inject LanguageService LanguageService
 @implements IDisposable
 
-<h3>Chat</h3>
-
-<div style="display: flex; flex-direction: column-reverse;">
- @foreach (var msg in chatMessages.Reverse())
-{
-    <div style="display: flex; flex-direction: column">
-        @((MarkupString)msg.Response)
+<div class="chat-container">
+    <div class="chat-message-container">
+        @foreach (var msg in chatMessages)
+    {
+        <div class="chat-input">@msg.Message (@msg.SelectedLanguage)</div>
+        <div class="chat-response">
+            <pre>@(msg.Response)</pre>
+        </div>
+    }
     </div>
-    <div style="background-color: lightblue; margin-left: auto; max-width: 70%; padding: 10px;">@msg.Message (@msg.SelectedLanguage)</div>
-}
 </div>
-
-<div style="visibility: @SpinnerVisibility">
-  <div class="spinner-border" role="status">
-    <span class="sr-only"></span>
+<div class="user-input">
+  <div style="visibility: @SpinnerVisibility">
+    <div class="spinner-border" role="status">
+      <span class="sr-only"></span>
+    </div>
   </div>
+  <div>
+    <input type="text" @bind="@message" @onkeyup="CheckForEnter" />
+  </div>
+  <LanguageSelector OnLanguageChanged="OnLanguageChanged" />
 </div>
-<div>
-    <input style="width: 400px" type="text" @bind="@message" @onkeyup="CheckForEnter" />
-</div>
-<LanguageSelector OnLanguageChanged="OnLanguageChanged" />
+<Console />
+
 
 @code {
   private string message = string.Empty;
@@ -76,8 +79,7 @@
 
     // Call DslAIService to send chat message
     SpinnerVisibility = "visible";
-    var response = await AIService.AskAI(newMessage.Message, MyDsl.AntlrDef, _cts.Token);
-    newMessage.Response = Markdig.Markdown.ToHtml(response);
+    newMessage.Response = await AIService.AskAI(newMessage.Message, MyDsl.AntlrDef, _cts.Token);
 
     // await foreach (var chunk in response)
     // {

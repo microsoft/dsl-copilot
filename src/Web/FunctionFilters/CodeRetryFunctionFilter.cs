@@ -3,11 +3,11 @@ using DslCopilot.Web.Validators;
 using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.FunctionFilters;
-public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Kernel kernel) : IFunctionFilter
+public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, ConsoleService consoleService, Kernel kernel) : IFunctionFilter
 {
   private readonly Dictionary<string, int> _numRetries = [];
 
-  private const int MAX_RETRIES = 3;
+    private const int MAX_RETRIES = 3;
 
   public async void OnFunctionInvoked(FunctionInvokedContext context)
   {
@@ -40,8 +40,11 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Kern
     {
       _numRetries.TryAdd(operationId, 0);
       _numRetries[operationId] += 1;
+      consoleService.WriteToConsole(chatSessionId, $"Code generation had errors. Errors: {string.Join(Environment.NewLine, result.Errors)}");
+      consoleService.WriteToConsole(chatSessionId, $"Retrying... (Attempt {_numRetries[operationId]})");
+
       if (_numRetries[operationId] < MAX_RETRIES)
-      {
+      {      
         var chatSession = chatSessionService.GetChatSession(chatSessionId);
         chatSession.AddUserMessage("Unfortunately, this code contains the following errors:");
         foreach (var error in result.Errors)

@@ -1,4 +1,4 @@
-﻿using Microsoft.KernelMemory;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.Services;
