@@ -1,0 +1,37 @@
+﻿@using DslCopilot.Web.Services
+@inject ConsoleService ConsoleService
+@inject ChatSessionIdService ChatSessionIdService
+@implements IDisposable
+
+<div class="console-container">
+@foreach(var line in ConsoleLines)
+{
+    <div class="console-text">@line</div>
+}
+</div>
+@code {
+  private IList<string> ConsoleLines = new List<string>();
+
+  private string? _chatSessionId;
+
+  protected override void OnInitialized()
+  {
+    _chatSessionId = ChatSessionIdService.GetChatSessionId();
+    ConsoleService.RegisterConsole(_chatSessionId, AddLine);
+    base.OnInitialized();
+  }
+
+  protected void AddLine(string line)
+  {
+    ConsoleLines.Add(line);
+    InvokeAsync(StateHasChanged);
+  }
+
+  public void Dispose()
+  {
+    if (_chatSessionId != null)
+    {
+      ConsoleService.RemoveConsole(_chatSessionId);
+    }
+  }
+}

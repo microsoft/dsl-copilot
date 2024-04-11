@@ -23,19 +23,23 @@ builder.Services.Configure<LanguageBlobServiceOptions>(
 
 builder.Services.AddSingleton<LanguageService>();
 
-// We need an instance of ChatSessionService for the Kernel to use.
+// We need an instances of ChatSessionService and ConsoleService for the Kernel FunctionFilters to use.
 ChatSessionService chatSessionService = new();
+ConsoleService consoleService = new();
 builder.Services.AddSingleton(_ =>
 {
   return chatSessionService;
+});
+builder.Services.AddSingleton(_ =>
+{
+  return consoleService;
 });
 
 // Chat history should be scoped, since we want one per user session.
 builder.Services.AddScoped<DslAIService>();
 builder.Services.AddScoped<ChatSessionIdService>();
 
-builder.Services.AddKernelWithCodeGenFilters(chatSessionService, builder.Configuration.GetSection("AzureOpenAI").Get<AzureOpenAIOptions>());
-
+builder.Services.AddKernelWithCodeGenFilters(consoleService, chatSessionService, builder.Configuration.GetSection("AzureOpenAI").Get<AzureOpenAIOptions>());
 
 var app = builder.Build();
 

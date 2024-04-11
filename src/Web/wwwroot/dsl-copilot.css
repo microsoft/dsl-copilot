@@ -1,0 +1,55 @@
+﻿.app-title {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column-reverse;
+    height: 50vh;
+    overflow-y: scroll;
+}
+
+.chat-messge-container {
+    flex: 1;
+}
+
+.chat-response {
+    font-family: 'Cascadia Code', monospace;
+    color: black;
+}
+
+.chat-input {
+    border-radius: 5px;
+    background-color: lightblue;
+    margin-left: auto;
+    max-width: 70%;
+    padding: 10px;
+}
+
+div.user-input input[type="text"] {
+    width: 70%;
+}
+
+.console-container {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    height: 30vh;
+    width: 100%;
+    background-color: black;
+    overflow-y: scroll;
+}
+
+.console-text {
+    padding: 20px;
+    font-size: 16px;
+    line-height: 1.5;
+    color: white;
+    font-family: 'Lucida Console', monospace;
+}
+
+.language-selector {
+    width: 50%;
+}
+
