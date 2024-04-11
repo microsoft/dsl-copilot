@@ -1,66 +1,48 @@
-﻿using DslCopilot.Web.Options;
-using Microsoft.Extensions.Options;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.ChatCompletion;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
-using Microsoft.SemanticKernel.Plugins.Core;
 
-namespace DslCopilot.Web.Services
+namespace DslCopilot.Web.Services;
+public class DslAIService(
+  Kernel kernel,
+  IKernelMemory memory,
+  ChatSessionIdService chatSessionIdService,
+  ChatSessionService chatSessionService)
 {
-  public class DslAIService
+  public async Task<string> AskAI(string userMessage, string antlrDef, CancellationToken cancellationToken)
   {
+    var chatSessionId = chatSessionIdService.GetChatSessionId();
+    var chatHistory = chatSessionService.GetChatSession(chatSessionId);
 
-    Kernel _kernel;
+    var operationId = Guid.NewGuid().ToString();
 
-    ChatSessionIdService _chatSessionIdService;
-    ChatSessionService _chatSessionService;
-    IChatCompletionService _chatCompletionService;
-    OpenAIPromptExecutionSettings _executionSettings;
-
-    public DslAIService(
-      Kernel kernel, 
-      ChatSessionIdService chatSessionIdService,
-      ChatSessionService chatSessionService)
+    if (chatHistory.Count == 0)
     {
-      _kernel = kernel;
-      _chatSessionIdService = chatSessionIdService;
-      _chatSessionService = chatSessionService;
-
-      _chatCompletionService = _kernel.GetRequiredService<IChatCompletionService>();
-
-      _executionSettings = new OpenAIPromptExecutionSettings()
-      {
-        ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions
-      };
+      chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given ANTLR grammar.  You only respond with code, and you only respond with code that conforms to this grammar: {antlrDef}");
     }
 
-    public async Task<string> AskAI(string userMessage, string antlrDef, CancellationToken cancellationToken)
-    {
-      var chatSessionId = _chatSessionIdService.GetChatSessionId();
-      var chatHistory = _chatSessionService.GetChatSession(chatSessionId);
+    chatHistory.AddUserMessage(userMessage);
+    kernel.Data["chatSessionId"] = chatSessionId;
+    kernel.Data["operationId"] = operationId;
 
-      var operationId = Guid.NewGuid().ToString();
-
-      if (chatHistory.Count == 0)
-      {
-        chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given ANTLR grammar.  You only respond with code, and you only respond with code that conforms to this grammar: {antlrDef}");
-      }
-
-      chatHistory.AddUserMessage(userMessage);
-      _kernel.Data["chatSessionId"] = chatSessionId;
-      _kernel.Data["operationId"] = operationId;
-
-      //var result = _chatCompletionService.GetStreamingChatMessageContentsAsync(chatHistory, _executionSettings);
-
-      var result = await _kernel.InvokeAsync("plugins", "CodeGen", new()
+    var fewShotExamples = await GetFewShotExamples(userMessage, cancellationToken);
+    var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
       {
         { "input", userMessage },
         { "history", string.Join(Environment.NewLine, chatHistory) },
+        { "grammar", antlrDef },
+        { "fewShotExamples", fewShotExamples },
         { "chatSessionId", chatSessionId },
         { "operationId", operationId }
       }, cancellationToken);
 
-      return result.GetValue<string>() ?? string.Empty;
-    }
+    return result.GetValue<string>() ?? string.Empty;
+  }
+
+  private async Task<string> GetFewShotExamples(string input, CancellationToken cancellationToken)
+  {
+    IEnumerable<string?> examples = await File.ReadAllLinesAsync("examples/csharp.md", cancellationToken);
+    var memories = await memory.SearchAsync(input, limit: 3, cancellationToken: cancellationToken);
+    var results = examples.Concat([memories.ToString()]).Where(x => x != null).Cast<string>();
+    return string.Join(Environment.NewLine, results);
   }
 }

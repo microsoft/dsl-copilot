@@ -1,7 +1,6 @@
 using DslCopilot.Web.KernelHelpers;
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
-using DslCopilot.Web;
 using DslCopilot.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -39,7 +38,16 @@ builder.Services.AddSingleton(_ =>
 builder.Services.AddScoped<DslAIService>();
 builder.Services.AddScoped<ChatSessionIdService>();
 
-builder.Services.AddKernelWithCodeGenFilters(consoleService, chatSessionService, builder.Configuration.GetSection("AzureOpenAI").Get<AzureOpenAIOptions>());
+var aiOptions = builder.Configuration
+    .SetBasePath("/")
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
+    .AddEnvironmentVariables()
+    .AddUserSecrets<AzureOpenAIOptions>(optional: true)
+    .Build()
+    .GetSection("AzureOpenAI")
+    .Get<AzureOpenAIOptions>()!;
+builder.Services.AddKernelWithCodeGenFilters(consoleService, chatSessionService, aiOptions);
 
 var app = builder.Build();
 

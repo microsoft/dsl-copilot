@@ -1,60 +1,64 @@
 ﻿using DslCopilot.Web.FunctionFilters;
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
+using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
+using Microsoft.Toolkit.Diagnostics;
 
-namespace DslCopilot.Web.KernelHelpers
+namespace DslCopilot.Web.KernelHelpers;
+public static class KernelBuilderExtensions
 {
-  public static class KernelBuilderExtensions
+  public static void AddKernelWithCodeGenFilters(this IServiceCollection services,
+    ConsoleService consoleService, 
+    ChatSessionService chatSessionService,
+    AzureOpenAIOptions? openAiOptions)
   {
-    public static void AddKernelWithCodeGenFilters(this IServiceCollection services, 
-      ConsoleService consoleService, 
-      ChatSessionService chatSessionService, 
-      AzureOpenAIOptions? openAiOptions)
+    ArgumentNullException.ThrowIfNull(openAiOptions);
+    Guard.IsNotNull(openAiOptions.EmbeddingDeploymentName, nameof(openAiOptions.EmbeddingDeploymentName));
+    Guard.IsNotNull(openAiOptions.CompletionDeploymentName, nameof(openAiOptions.CompletionDeploymentName));
+    Guard.IsNotNull(openAiOptions.Endpoint, nameof(openAiOptions.Endpoint));
+    Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
+
+    var memoryBuilder = new KernelMemoryBuilder();
+    memoryBuilder.WithAzureOpenAITextGeneration(new AzureOpenAIConfig
     {
+        APIKey = openAiOptions.ApiKey,
+        APIType = AzureOpenAIConfig.APITypes.ChatCompletion,
+        Endpoint = openAiOptions.Endpoint,
+        Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+        Deployment = openAiOptions.CompletionDeploymentName
+    });
+    memoryBuilder.WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig
+    {
+        APIKey = openAiOptions.ApiKey,
+        APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
+        Endpoint = openAiOptions.Endpoint,
+        Auth = AzureOpenAIConfig.AuthTypes.APIKey,
+        Deployment = openAiOptions.EmbeddingDeploymentName
+    });
+    var kernelBuilder = Kernel.CreateBuilder();
+    kernelBuilder.AddAzureOpenAIChatCompletion(
+        deploymentName: openAiOptions.CompletionDeploymentName,
+        endpoint: openAiOptions.Endpoint,
+        apiKey: openAiOptions.ApiKey
+    );
 
-      if (openAiOptions == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions));
-      }
+    var memory = memoryBuilder.Build();
+    services.AddTransient(provider => memory);
+    kernelBuilder.Services.AddTransient(provider => memory);
+    kernelBuilder.Services.AddSingleton<ChatSessionService>();
+    kernelBuilder.Plugins
+      .AddFromType<ConversationSummaryPlugin>();
 
-      if (openAiOptions.CompletionDeploymentName == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions.CompletionDeploymentName));
-      }
-
-      if (openAiOptions.Endpoint == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions.Endpoint));
-      }
-
-      if (openAiOptions.ApiKey == null)
-      {
-        throw new ArgumentNullException(nameof(openAiOptions.ApiKey));
-      }
-
-      var kernelBuilder = Kernel.CreateBuilder();
-
-      kernelBuilder.AddAzureOpenAIChatCompletion(
-          deploymentName: openAiOptions.CompletionDeploymentName,
-          endpoint: openAiOptions.Endpoint,
-          apiKey: openAiOptions.ApiKey
-      );
-
-#pragma warning disable SKEXP0050 // Experimental API
-      kernelBuilder.Plugins.AddFromType<ConversationSummaryPlugin>();
-      kernelBuilder.Plugins.AddFromPromptDirectory("plugins");
-#pragma warning restore SKEXP0050 // Experimental API
-
-
-      var kernel = kernelBuilder.Build();
-#pragma warning disable SKEXP0001 // Experimental API
-      kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
-#pragma warning restore SKEXP0001 // Experimental API
-
-      services.AddTransient(_ => kernel);
-    }
+    var kernel = kernelBuilder.Build();
+    kernel.Plugins.AddFromFunctions("yaml_plugins", [
+      kernel.CreateFunctionFromPromptYaml(
+        File.ReadAllText("plugins/generateCode.yaml")!,
+        promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
+    ]);
+    kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+    services.AddTransient(_ => kernel);
   }
 }
