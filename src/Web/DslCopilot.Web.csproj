@@ -10,20 +10,25 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
+    <PackageReference Include="Microsoft.Toolkit.Diagnostics" Version="*" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.7.1" />
     <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.7.1-alpha" />
+    <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.6.3" />
+    <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.6.3" />
+    <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.35.240321.1" />
+    <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.35.240321.1" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Update="plugins\CodeGen\config.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="plugins\CodeGen\skprompt.txt">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <None Update="plugins/*.yaml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="examples/*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 

@@ -1,0 +1,66 @@
+name: generateCode
+description: generates code snippets based on user input
+template: |
+  {{console-log "running generateCode"}}
+  {{ConversationSummaryPlugin-SummarizeConversation history}}
+
+  ## Instructions
+  
+  Use the provided grammar to generate code snippets based on user input.
+  Do not explain the reasoning, just reply back with code that fulfills the user input.
+  Don't format the code as markdown or code blocks, just provide the generated output as plain text.
+  Think carefully about what the user is asking for and provide the most appropriate code snippet.
+
+  {{#if grammar}}
+  ## Grammar
+
+  Use the following ANTLR grammar definition:
+  {{grammar}}
+  {{/if}}
+
+  {{#if fewShotExamples}}
+  ## Examples
+
+  Use the following related examples for reference:
+  {{#each fewShotExamples}}
+    {{this}}
+  {{/each}}
+  {{/if}}
+
+  ## Generated Output
+  Create code to complete the following:
+
+  prompt: {{input}}
+  respone: <result>
+
+  ## Response
+
+  Only output the code from the output:
+  <result>
+
+template_format: handlebars
+input_variables:
+  - name:          input
+    description:   The user's request
+    is_required:   true
+  - name:          grammar
+    description:   The grammar to be used for generating code
+    is_required:   false
+  - name:          history
+    description:   The conversation history
+    is_required:   false
+  - name:          fewShotExamples
+    description:   Few shot examples to supply colloquial and idomatic examples of code.
+    is_required:   false
+execution_settings:
+  default:
+    max_tokens:   1000
+    temperature:  0
+  gpt-3.5-turbo:
+    model_id:     gpt-3.5-turbo-0613
+    max_tokens:   1000
+    temperature:  0.2
+  gpt-4:
+    model_id:     gpt-4-1106-preview
+    max_tokens:   10000
+    temperature:  0.2
