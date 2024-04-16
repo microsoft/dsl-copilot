@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{20C100C2-DB2
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Web", "src\Web\DslCopilot.Web.csproj", "{67E418C4-1B62-4C2C-92E9-513E06122026}"
 EndProject
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "IndexingFunction", "src\IndexingFunction\IndexingFunction.pyproj", "{2DA2B7C5-8248-47F6-95E9-4C4B5C6C74B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,12 +19,15 @@ Global
 		{67E418C4-1B62-4C2C-92E9-513E06122026}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{67E418C4-1B62-4C2C-92E9-513E06122026}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{67E418C4-1B62-4C2C-92E9-513E06122026}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DA2B7C5-8248-47F6-95E9-4C4B5C6C74B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DA2B7C5-8248-47F6-95E9-4C4B5C6C74B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{67E418C4-1B62-4C2C-92E9-513E06122026} = {20C100C2-DB2F-4C00-9988-62815A0064BE}
+		{2DA2B7C5-8248-47F6-95E9-4C4B5C6C74B0} = {20C100C2-DB2F-4C00-9988-62815A0064BE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {AEEE109A-7518-4CBF-93EC-7F40F5E98C15}
