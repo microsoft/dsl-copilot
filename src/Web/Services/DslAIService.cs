@@ -1,4 +1,4 @@
-using Microsoft.KernelMemory;
+﻿using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.Services;
@@ -17,7 +17,7 @@ public class DslAIService(
 
     if (chatHistory.Count == 0)
     {
-      chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given ANTLR grammar.  You only respond with code, and you only respond with code that conforms to this grammar: {antlrDef}");
+      chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given grammar.");
     }
 
     chatHistory.AddUserMessage(userMessage);
