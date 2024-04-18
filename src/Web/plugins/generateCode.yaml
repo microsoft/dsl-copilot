@@ -1,7 +1,6 @@
 name: generateCode
 description: generates code snippets based on user input
 template: |
-  {{console-log "running generateCode"}}
   {{ConversationSummaryPlugin-SummarizeConversation history}}
 
   ## Instructions
@@ -32,6 +31,19 @@ template: |
 
   prompt: {{input}}
   respone: <result>
+
+  {{#if badCode}}
+  ## Code to be fixed
+  This example is almost correct!  But it contains errors:
+  {{badCode}}
+  {{/if}}
+  {{#if errors}}
+  ## Errors to fix
+  Here are the errors.  Make sure you fix them!:
+    {{#each errors}}
+    - {{this}}
+    {{/each}}
+  {{/if}}
 
   ## Response
 

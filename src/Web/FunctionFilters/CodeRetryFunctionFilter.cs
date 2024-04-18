@@ -9,7 +9,7 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
 
     private const int MAX_RETRIES = 3;
 
-  public async void OnFunctionInvoked(FunctionInvokedContext context)
+  public void OnFunctionInvoked(FunctionInvokedContext context)
   {
     if (context.Function.Name != "generateCode")
     {
@@ -53,8 +53,11 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
         }
         chatSession.AddUserMessage("Please correct the errors and try again.");
         context.Arguments["history"] = chatSession;
+        context.Arguments["errors"] = result.Errors;
+        context.Arguments["badCode"] = code;
+
         // re-invoke the function
-        var nextResult = await context.Function.InvokeAsync(kernel, context.Arguments);
+        var nextResult = context.Function.InvokeAsync(kernel, context.Arguments).GetAwaiter().GetResult();
         context.SetResultValue(nextResult.GetValue<string>());
       }
       else
@@ -69,5 +72,20 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
     }
   }
 
-  public void OnFunctionInvoking(FunctionInvokingContext context) { }
+  public void OnFunctionInvoking(FunctionInvokingContext context)
+  {
+    if (context.Function.Name != "generateCode")
+    {
+      return;
+    }
+
+    var chatSessionId = context.Arguments["chatSessionId"]?.ToString();
+    if (string.IsNullOrEmpty(chatSessionId))
+    {
+      return;
+    }
+
+    consoleService.WriteToConsole(chatSessionId, "Running generateCode function...");
+
+  }
 }

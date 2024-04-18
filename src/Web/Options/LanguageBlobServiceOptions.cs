@@ -1,6 +1,7 @@
 ﻿namespace DslCopilot.Web.Options;
-public record LanguageBlobServiceOptions(
-  string? AccessKey,
-  string? AccountName,
-  string? ContainerName
-);
+public class LanguageBlobServiceOptions
+{
+  public string? AccessKey { get; set; }
+  public string? AccountName { get; set; }
+  public string? ContainerName { get; set; }
+}
