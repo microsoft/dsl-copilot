@@ -4,18 +4,20 @@
 @using DslCopilot.Web.Data
 @inject DslAIService AIService
 @inject LanguageService LanguageService
+@inject ConsoleService ConsoleService;
+@inject ChatSessionIdService ChatSessionIdService;
 @implements IDisposable
 
 <div class="chat-container">
-    <div class="chat-message-container">
-        @foreach (var msg in chatMessages)
+  <div class="chat-message-container">
+    @foreach (var msg in chatMessages)
     {
-        <div class="chat-input">@msg.Message (@msg.SelectedLanguage)</div>
-        <div class="chat-response">
-            <pre>@(msg.Response)</pre>
-        </div>
-    }
+      <div class="chat-input">@msg.Message (@msg.SelectedLanguage)</div>
+      <div class="chat-response">
+      <pre>@(msg.Response)</pre>
     </div>
+    }
+  </div>
 </div>
 <div class="user-input">
   <div style="visibility: @SpinnerVisibility">
@@ -42,15 +44,19 @@
   private CancellationTokenSource _cts = new();
 
   private DslDef MyDsl = new DslDef
-    {
-      Name = "MyDsl"
-    };
+  {
+    Name = "MyDsl"
+  };
 
 
   private async Task OnLanguageChanged(string language)
   {
     selectedLanguage = language;
-    var grammarFile = await LanguageService.GetGrammarForLanguage(selectedLanguage);
+    var sessionId = ChatSessionIdService.GetChatSessionId();
+    ConsoleService.WriteToConsole(sessionId, $"Language Changing Scheduler: {SynchronizationContext.Current?.ToString()}");
+    var grammarFile = await LanguageService
+      .GetGrammarForLanguage(selectedLanguage, _cts.Token);
+    ConsoleService.WriteToConsole(sessionId, $"Language Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
     MyDsl.AntlrDef = grammarFile;
   }
 
@@ -58,39 +64,33 @@
   {
     if (e.Key == "Enter")
     {
+    var sessionId = ChatSessionIdService.GetChatSessionId();
+    ConsoleService.WriteToConsole(sessionId, $"Changing Scheduler: {SynchronizationContext.Current?.ToString()}");
       await SendMessage();
+    ConsoleService.WriteToConsole(sessionId, $"Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
     }
   }
 
   private async Task SendMessage()
   {
-
-    var newMessage = new ChatMessage()
-      {
-        Message = message,
-        Response = string.Empty,
-        SelectedLanguage = selectedLanguage
-      };
-
-    chatMessages.Add(newMessage);
+    var newMessage = new ChatMessage
+    {
+      Message = message,
+      Response = string.Empty,
+      SelectedLanguage = selectedLanguage
+    };
 
     // Clear the input field
     message = string.Empty;
+    chatMessages.Add(newMessage);
 
     // Call DslAIService to send chat message
     SpinnerVisibility = "visible";
-    newMessage.Response = await AIService.AskAI(newMessage.Message, MyDsl.AntlrDef, _cts.Token);
-
-    // await foreach (var chunk in response)
-    // {
-    //   responseString += chunk;
-    //   newMessage.Response = Markdig.Markdown.ToHtml(responseString);
-    //   await InvokeAsync(StateHasChanged);
-    // }
+    newMessage.Response = await AIService
+      .AskAI(newMessage.Message, MyDsl.AntlrDef, selectedLanguage, _cts.Token);
 
     SpinnerVisibility = "hidden";
     await InvokeAsync(StateHasChanged);
-
   }
 
   public void Dispose()

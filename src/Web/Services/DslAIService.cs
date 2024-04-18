@@ -8,7 +8,7 @@ public class DslAIService(
   ChatSessionIdService chatSessionIdService,
   ChatSessionService chatSessionService)
 {
-  public async Task<string> AskAI(string userMessage, string antlrDef, CancellationToken cancellationToken)
+  public async Task<string> AskAI(string userMessage, string antlrDef, string language, CancellationToken cancellationToken)
   {
     var chatSessionId = chatSessionIdService.GetChatSessionId();
     var chatHistory = chatSessionService.GetChatSession(chatSessionId);
@@ -21,8 +21,6 @@ public class DslAIService(
     }
 
     chatHistory.AddUserMessage(userMessage);
-    kernel.Data["chatSessionId"] = chatSessionId;
-    kernel.Data["operationId"] = operationId;
 
     var fewShotExamples = await GetFewShotExamples(userMessage, cancellationToken);
     var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
@@ -32,7 +30,8 @@ public class DslAIService(
         { "grammar", antlrDef },
         { "fewShotExamples", fewShotExamples },
         { "chatSessionId", chatSessionId },
-        { "operationId", operationId }
+        { "operationId", operationId },
+        { "language", language }
       }, cancellationToken);
 
     return result.GetValue<string>() ?? string.Empty;

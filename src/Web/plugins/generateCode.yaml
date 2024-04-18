@@ -1,7 +1,6 @@
 name: generateCode
 description: generates code snippets based on user input
 template: |
-  {{console-log "running generateCode"}}
   {{ConversationSummaryPlugin-SummarizeConversation history}}
 
   ## Instructions

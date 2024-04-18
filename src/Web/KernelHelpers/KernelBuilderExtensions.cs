@@ -1,13 +1,14 @@
-﻿using DslCopilot.Web.FunctionFilters;
-using DslCopilot.Web.Options;
-using DslCopilot.Web.Services;
-using Microsoft.KernelMemory;
+﻿using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
 using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
 using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.KernelHelpers;
+using FunctionFilters;
+using Options;
+using Services;
+
 public static class KernelBuilderExtensions
 {
   public static void AddKernelWithCodeGenFilters(this IServiceCollection services,
@@ -20,6 +21,8 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.CompletionDeploymentName, nameof(openAiOptions.CompletionDeploymentName));
     Guard.IsNotNull(openAiOptions.Endpoint, nameof(openAiOptions.Endpoint));
     Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
+    Guard.IsNotNull(openAiOptions.SearchEndpoint, nameof(openAiOptions.SearchEndpoint));
+    Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
 
     var memoryBuilder = new KernelMemoryBuilder();
     memoryBuilder.WithAzureOpenAITextGeneration(new AzureOpenAIConfig
@@ -38,6 +41,12 @@ public static class KernelBuilderExtensions
         Auth = AzureOpenAIConfig.AuthTypes.APIKey,
         Deployment = openAiOptions.EmbeddingDeploymentName
     });
+    memoryBuilder.WithAzureAISearchMemoryDb(new AzureAISearchConfig
+    {
+        APIKey = openAiOptions.SearchApiKey,
+        Endpoint = openAiOptions.SearchEndpoint,
+        Auth = AzureAISearchConfig.AuthTypes.APIKey
+    });    
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
@@ -59,6 +68,7 @@ public static class KernelBuilderExtensions
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
     kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+    kernel.FunctionFilters.Add(new PromptBankFunctionFilter(memory));
     services.AddTransient(_ => kernel);
   }
 }

@@ -3,19 +3,18 @@ using DslCopilot.Web.Validators;
 using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.FunctionFilters;
-public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, ConsoleService consoleService, Kernel kernel) : IFunctionFilter
+public class CodeRetryFunctionFilter(
+  ChatSessionService chatSessionService,
+  ConsoleService consoleService,
+  Kernel kernel)
+  : FunctionFilterBase("generateCode")
 {
   private readonly Dictionary<string, int> _numRetries = [];
 
-    private const int MAX_RETRIES = 3;
+  private const int MAX_RETRIES = 3;
 
-  public async void OnFunctionInvoked(FunctionInvokedContext context)
+  protected override async Task OnFunctionInvokedAsync(FunctionInvokedContext context, CancellationToken token)
   {
-    if (context.Function.Name != "generateCode")
-    {
-      return;
-    }
-
     var chatSessionId = context.Arguments["chatSessionId"]?.ToString();
     if (string.IsNullOrEmpty(chatSessionId))
     {
@@ -35,7 +34,13 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
       return;
     }
 
-    var result = CSharpCodeValidator.ValidateCode(code);
+    var language = context.Arguments["language"]?.ToString();
+    if (string.IsNullOrEmpty(language))
+    {
+      return;
+    }
+
+    var result = GetCodeValidationResults(language, code);
     if (!result.IsValid)
     {
       _numRetries.TryAdd(operationId, 0);
@@ -44,7 +49,7 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
       consoleService.WriteToConsole(chatSessionId, $"Retrying... (Attempt {_numRetries[operationId]})");
 
       if (_numRetries[operationId] < MAX_RETRIES)
-      {      
+      {
         var chatSession = chatSessionService.GetChatSession(chatSessionId);
         chatSession.AddUserMessage("Unfortunately, this code contains the following errors:");
         foreach (var error in result.Errors)
@@ -54,7 +59,11 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
         chatSession.AddUserMessage("Please correct the errors and try again.");
         context.Arguments["history"] = chatSession;
         // re-invoke the function
-        var nextResult = await context.Function.InvokeAsync(kernel, context.Arguments);
+        
+        
+        var nextResult = await context.Function
+          .InvokeAsync(kernel, context.Arguments, token)
+          .ConfigureAwait(false);
         context.SetResultValue(nextResult.GetValue<string>());
       }
       else
@@ -69,5 +78,10 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
     }
   }
 
-  public void OnFunctionInvoking(FunctionInvokingContext context) { }
+  private static CodeValidationResult GetCodeValidationResults(string language, string code) => language switch
+  {
+    "csharp" => CSharpCodeValidator.ValidateCode(code),
+    //TODO: Add more languages
+    _ => new() { IsValid = true }
+  };
 }

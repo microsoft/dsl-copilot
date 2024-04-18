@@ -12,6 +12,7 @@
 </div>
 
 @code {
+  private CancellationTokenSource _cts = new();
 
   [Parameter]
   public EventCallback<string> OnLanguageChanged { get; set; }
@@ -33,7 +34,8 @@
 
   protected override async Task OnInitializedAsync()
   {
-    Languages = await LanguageService.GetSupportedLanguages();
+    Languages = await LanguageService
+      .GetSupportedLanguages(_cts.Token);
     SelectedLanguage = Languages[0];
     await base.OnInitializedAsync();
   }

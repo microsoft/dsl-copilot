@@ -20,6 +20,7 @@
     <PackageReference Include="Microsoft.SemanticKernel.Plugins.Core" Version="1.7.1-alpha" />
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.6.3" />
     <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.6.3" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.7.1-alpha" />
     <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.35.240321.1" />
     <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.35.240321.1" />
   </ItemGroup>
