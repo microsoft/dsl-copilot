@@ -3,10 +3,11 @@
 # Manually managing azure-functions-worker may cause unexpected issues
 
 azure-functions
+azure.storage.blob
+azure-search-documents
+azure.identity
 llama-index
 llama-index-vector-stores-azureaisearch
-azure-search-documents
 llama-index-embeddings-azure-openai
 llama-index-llms-azure-openai
 llama-index-readers-azstorage_blob
-azure.identity
