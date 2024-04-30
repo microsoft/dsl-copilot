@@ -5,13 +5,9 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0C51E2FD-6246-4254-A900-EE1B9980B5B3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApiService", "src\ApiService\ApiService.csproj", "{018540C6-7EAB-4895-8BCA-DAE2D1E2778F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Web", "src\Web\DslCopilot.Web.csproj", "{7F62A32B-6E30-4E19-9578-D85792DF3884}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ServiceDefaults", "src\ServiceDefaults\ServiceDefaults.csproj", "{7B78273A-AB53-4BFF-A8AA-B0FFE98CB078}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AppHost", "src\AppHost\AppHost.csproj", "{BC786180-412D-4455-9B15-4C73855D8515}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Web", "src\Web\DslCopilot.Web.csproj", "{6BD23195-D5F4-496C-848F-13C0BEB21B17}"
+Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "IndexingFunction1", "src\IndexingFunction\IndexingFunction1.pyproj", "{558BB007-5D86-404E-8B33-F9F4689771A6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,33 +15,17 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{018540C6-7EAB-4895-8BCA-DAE2D1E2778F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{018540C6-7EAB-4895-8BCA-DAE2D1E2778F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{018540C6-7EAB-4895-8BCA-DAE2D1E2778F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{018540C6-7EAB-4895-8BCA-DAE2D1E2778F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7B78273A-AB53-4BFF-A8AA-B0FFE98CB078}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B78273A-AB53-4BFF-A8AA-B0FFE98CB078}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B78273A-AB53-4BFF-A8AA-B0FFE98CB078}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B78273A-AB53-4BFF-A8AA-B0FFE98CB078}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BC786180-412D-4455-9B15-4C73855D8515}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC786180-412D-4455-9B15-4C73855D8515}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BC786180-412D-4455-9B15-4C73855D8515}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BC786180-412D-4455-9B15-4C73855D8515}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6BD23195-D5F4-496C-848F-13C0BEB21B17}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6BD23195-D5F4-496C-848F-13C0BEB21B17}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6BD23195-D5F4-496C-848F-13C0BEB21B17}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6BD23195-D5F4-496C-848F-13C0BEB21B17}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Release|Any CPU.Build.0 = Release|Any CPU
+		{558BB007-5D86-404E-8B33-F9F4689771A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{558BB007-5D86-404E-8B33-F9F4689771A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{018540C6-7EAB-4895-8BCA-DAE2D1E2778F} = {0C51E2FD-6246-4254-A900-EE1B9980B5B3}
-		{7B78273A-AB53-4BFF-A8AA-B0FFE98CB078} = {0C51E2FD-6246-4254-A900-EE1B9980B5B3}
-		{BC786180-412D-4455-9B15-4C73855D8515} = {0C51E2FD-6246-4254-A900-EE1B9980B5B3}
-		{6BD23195-D5F4-496C-848F-13C0BEB21B17} = {0C51E2FD-6246-4254-A900-EE1B9980B5B3}
-	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {93E446C4-8F16-4EBC-8CE8-98BBF3EF174B}
+		SolutionGuid = {AEEE109A-7518-4CBF-93EC-7F40F5E98C15}
 	EndGlobalSection
 EndGlobal

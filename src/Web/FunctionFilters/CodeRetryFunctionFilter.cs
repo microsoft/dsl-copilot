@@ -58,9 +58,10 @@ public class CodeRetryFunctionFilter(
         }
         chatSession.AddUserMessage("Please correct the errors and try again.");
         context.Arguments["history"] = chatSession;
+        context.Arguments["errors"] = result.Errors;
+        context.Arguments["badCode"] = code;
+
         // re-invoke the function
-        
-        
         var nextResult = await context.Function
           .InvokeAsync(kernel, context.Arguments, token)
           .ConfigureAwait(false);

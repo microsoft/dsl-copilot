@@ -8,12 +8,9 @@
 		"ghcr.io/devcontainers/features/azure-cli:1": {},
 		"ghcr.io/devcontainers/features/dotnet:2": {},
 		"ghcr.io/devcontainers/features/python:1": {},
-		"ghcr.io/azure/azure-dev/azd:0": {},
-		"ghcr.io/elanhasson/devcontainer-features/dotnet-aspire-daily:1": {}
+		"ghcr.io/azure/azure-dev/azd:0": {}
 	},
 	"postCreateCommand": [
-		"dotnet workload update",
-		"dotnet workload install aspire",
 		"dotnet dev-certs https --trust"
 	],
 	"customizations": {
@@ -32,19 +29,13 @@
 	},
 
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [17105, 15229, 21232, 22109],
+	"forwardPorts": [17105, 15229],
 	"portsAttributes": {
 			"17105": {
 				"protocol": "https"
 			},
 			"15229": {
-				"protocol": "https"
-			},
-			"21232": {
-				"protocol": "https"
-			},
-			"22109": {
-				"protocol": "https"
+				"protocol": "http"
 			}
 	}
 

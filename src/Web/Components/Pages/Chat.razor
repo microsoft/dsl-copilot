@@ -86,11 +86,16 @@
 
     // Call DslAIService to send chat message
     SpinnerVisibility = "visible";
+    var sessionId = ChatSessionIdService.GetChatSessionId();
+    ConsoleService.WriteToConsole(sessionId, $"(AskAI) Changing Scheduler: {SynchronizationContext.Current?.ToString()}");
     newMessage.Response = await AIService
       .AskAI(newMessage.Message, MyDsl.AntlrDef, selectedLanguage, _cts.Token);
+    ConsoleService.WriteToConsole(sessionId, $"(AskAI) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
 
     SpinnerVisibility = "hidden";
+    ConsoleService.WriteToConsole(sessionId, $"(AskAI) Changing Scheduler: {SynchronizationContext.Current?.ToString()}");
     await InvokeAsync(StateHasChanged);
+    ConsoleService.WriteToConsole(sessionId, $"(AskAI) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
   }
 
   public void Dispose()
