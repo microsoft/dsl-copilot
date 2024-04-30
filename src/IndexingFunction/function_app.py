@@ -1,8 +1,27 @@
 import logging
 import os
+import uuid
+
 import azure.functions as func
+from openai import AzureOpenAI
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents.indexes import SearchIndexClient
+from azure.search.documents import SearchClient
+from azure.search.documents.indexes.models import SearchIndex
+from azure.search.documents.indexes.models import (
+    ComplexField,
+    CorsOptions,
+    SearchIndex,
+    ScoringProfile,
+    SearchFieldDataType,
+    SimpleField,
+    VectorSearch,
+    SearchField,
+    SearchableField,
+    VectorSearchAlgorithmConfiguration,
+    VectorSearchProfile,
+    HnswAlgorithmConfiguration
+)
 from llama_index.vector_stores.azureaisearch import AzureAISearchVectorStore
 from llama_index.vector_stores.azureaisearch import IndexManagement
 from llama_index.core.settings import Settings
@@ -97,3 +116,60 @@ def __create_blob_loader__(blob_name: str) -> AzStorageBlobReader:
         account_url=account_url,
         connection_string=connection_string,
     )
+
+
+
+@app.blob_trigger(arg_name="myblob", path="code-content",
+                               connection="function_storage_connection") 
+def code_indexing(myblob: func.InputStream):
+    logging.info(f"Python blob trigger function processed blob"
+                f"Name: {myblob.name}"
+                f"Blob Size: {myblob.length} bytes")
+    
+    indexName = os.environ["AISeachCodeIndexName"]
+    searchIndexClient = __create_search_index__()
+    indexes = searchIndexClient.list_index_names()
+    
+    if indexName not in indexes:
+        __create_code_index(searchIndexClient, indexName)
+
+    __insert_code_documents(searchIndexClient)
+
+def __create_code_index(searchIndexClient: SearchIndexClient, indexName: str):
+    vector_search = VectorSearch(
+        profiles=[VectorSearchProfile(name="vector-config", algorithm_configuration_name="algorithms-config")],
+        algorithms=[HnswAlgorithmConfiguration(name="algorithms-config")],
+    )
+    index = SearchIndex(
+        name=os.environ["AISeachCodeIndexName"],
+        fields=[
+            SimpleField(name="id", type=SearchFieldDataType.String, key=True, sortable=True, filterable=True, facetable=True),
+            SearchableField(name="prompt", type=SearchFieldDataType.String),
+            SimpleField(name="response", type=SearchFieldDataType.String),
+            SearchField(name="embedding", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
+                        searchable=True, vector_search_dimensions=1536, vector_search_profile_name="vector-config"),
+        ],
+        vector_search=vector_search,
+    )
+
+    searchIndexClient.create_index(index)
+
+def __insert_code_documents(searchIndexClient: SearchIndexClient):
+    search_client = searchIndexClient.get_search_client(os.environ["AISeachCodeIndexName"])
+    client = AzureOpenAI(
+        azure_endpoint = os.environ["OpenAIEndpoint"], 
+        api_key=os.environ["OpenAIAPIKey"],  
+        api_version=os.environ["OpenAIAPIVersion"]
+    )
+    
+    document_id = str(uuid.uuid4())
+    embedding = client.embeddings.create(input="Hello Worl", model=os.environ["OpenAIEmbeddingModelName"]).data[0].embedding
+    DOCUMENT = {
+        "id": document_id,
+        "prompt": "Hello World",
+        "response": "Testing",
+        "embedding": embedding,
+    }
+
+    result = search_client.upload_documents(documents=[DOCUMENT])
+    logging.info(f"Upload of new document with id {document_id} succeeded: {result[0].succeeded}")
