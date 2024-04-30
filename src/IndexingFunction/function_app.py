@@ -1,7 +1,9 @@
 import logging
 import os
 import azure.functions as func
+from azure.identity import DefaultAzureCredential
 from azure.core.credentials import AzureKeyCredential
+from azure.storage.blob import BlobClient
 from azure.search.documents.indexes import SearchIndexClient
 from llama_index.vector_stores.azureaisearch import AzureAISearchVectorStore
 from llama_index.vector_stores.azureaisearch import IndexManagement
@@ -16,16 +18,20 @@ app = func.FunctionApp()
 @app.blob_trigger(arg_name="indexBlob", path="dsl-content",
                                connection="function_storage_connection") 
 def blob_trigger(indexBlob: func.InputStream):
+    logging.info(f"Indexing blob: {indexBlob.name}")
+    
     llama_index_service: LlamaIndexService = LlamaIndexService()
     blob_name: str = indexBlob.name.split("/")[-1]    
     aoai_model_name: str = os.environ["OpenAIModelName"]
     aoai_api_key: str = os.environ["OpenAIAPIKey"]
     aoai_endpoint: str = os.environ["OpenAIEndpoint"]
     aoai_api_version: str = os.environ["OpenAIAPIVersion"]
+    search_index_name: str = os.environ["AISearchIndexName"]
     embed_model = __create_embedding_model__()
-    vector_store = __create_vector_store__()
+    vector_store = __create_vector_store__(search_index_name)
     blob_loader = __create_blob_loader__(blob_name)
     
+    logging.info(f"Storing chunk data in Azure AI Search Index: {search_index_name}")
     llama_index_service.index_documents(
         aoai_model_name,
         aoai_api_key,
@@ -36,22 +42,28 @@ def blob_trigger(indexBlob: func.InputStream):
         blob_loader
     )
 
+    __move_index_blob(indexBlob, blob_name)
+
 # Create the Azure AI Search Index
 def __create_search_index__() -> SearchIndexClient: 
     search_service_endpoint: str = os.environ["AISearchEndpoint"]
     search_service_api_key: str = os.environ["AISearchAPIKey"]
     credential = AzureKeyCredential(search_service_api_key)
     
+    logging.info(f"Creating Azure AI Search Index: {search_service_endpoint}")
+
     return SearchIndexClient(
         endpoint=search_service_endpoint,
         credential=credential,
     )
 
 # Create the Azure AI Search Vector Store
-def __create_vector_store__() -> AzureAISearchVectorStore:
-    search_index_name: str = os.environ["AISearchIndexName"]
+def __create_vector_store__(search_index_name: str) -> AzureAISearchVectorStore:
+    
     index_client: SearchIndexClient = __create_search_index__()
     metadata_fields = {}
+
+    logging.info(f"Creating Azure AI Search Vector Store: {search_index_name}")
 
     return AzureAISearchVectorStore(
         search_or_index_client=index_client,
@@ -75,6 +87,8 @@ def __create_embedding_model__() -> AzureOpenAIEmbedding:
     aoai_api_version: str = os.environ["OpenAIAPIVersion"]
     aoai_embedding_model_name: str = os.environ["OpenAIEmbeddingModelName"]
 
+    logging.info(f"Creating Azure OpenAI Embedding Model: {aoai_embedding_model_name}")
+
     embed_model = AzureOpenAIEmbedding(
         model=aoai_embedding_model_name,
         deployment_name=aoai_embedding_model_name,
@@ -91,9 +105,27 @@ def __create_blob_loader__(blob_name: str) -> AzStorageBlobReader:
     account_url: str = os.environ["StorageAccountUrl"]
     connection_string: str = os.environ["StorageAccountConnectionString"]
     
+    logging.info(f"Creating Azure Blob Loader for container {container_name} and blob {blob_name}.")
+
     return AzStorageBlobReader(
         container_name=container_name,
         blob=blob_name,
         account_url=account_url,
         connection_string=connection_string,
     )
+
+# Move the index blob from the DSL content container to the indexed container
+def __move_index_blob(indexBlob: func.InputStream, blob_name: str):
+    source_container_name: str = os.environ["StorageAccountContainerName"]
+    destination_container_name: str = os.environ["IndexContainerName"]
+    account_url = os.environ["StorageAccountUrl"]
+    credential = DefaultAzureCredential()
+    source_service_client = BlobClient(account_url, credential=credential, container_name=source_container_name, blob_name=blob_name)
+    destination_blob_service_client = BlobClient(account_url, credential=credential, container_name=destination_container_name, blob_name=blob_name)
+
+    logging.info(f"Uploading index blob {blob_name} to container {destination_container_name}.")
+    destination_blob_service_client.upload_blob(indexBlob, blob_type="BlockBlob")
+
+    logging.info(f"Deleting index blob {blob_name} from container {source_container_name}.")
+    source_service_client.delete_blob()
+
