@@ -10,11 +10,13 @@
     <link rel="stylesheet" href="dsl-copilot.css" />
     <link rel="stylesheet" href="DslCopilot.Web.styles.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/software-base.css">
     <HeadOutlet />
 </head>
 
 <body>
     <Routes />
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js?v=@(typeof(Radzen.Colors).Assembly.GetName().Version)"></script>
     <script src="_framework/blazor.web.js"></script>
 </body>
 
