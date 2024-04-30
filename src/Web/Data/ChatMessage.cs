@@ -4,4 +4,6 @@ public class ChatMessage
   public string Message { get; set; } = string.Empty;
   public string Response { get; set; } = string.Empty;
   public string? SelectedLanguage { get; set; }
+  public int Rating { get; set; }
+  public string CodeComments { get; set; }
 }

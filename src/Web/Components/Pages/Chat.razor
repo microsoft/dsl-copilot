@@ -9,12 +9,35 @@
 <div class="chat-container">
     <div class="chat-message-container">
         @foreach (var msg in chatMessages)
-    {
-        <div class="chat-input">@msg.Message (@msg.SelectedLanguage)</div>
-        <div class="chat-response">
-            <pre>@(msg.Response)</pre>
-        </div>
-    }
+        {
+            <div class="chat-messge-container">
+                <div class="chat-bubble-input">
+                    <div class="">@msg.Message (@msg.SelectedLanguage)</div>
+                </div>
+            </div>
+
+             <div class="chat-messge-container" style="visibility: @(msg.Response is not null && msg.Response != string.Empty ? "visible" : "hidden")">
+                <div class="chat-bubble-response">
+                        <div class="chat-response">
+                            <pre>@(msg.Response)</pre>
+                        </div>
+                        <div class="chat-bubble-footer">
+                            <div>
+                                Code Comments:
+                            <RadzenTextArea class="w-100" aria-label="TextArea" @bind-Value=@msg.CodeComments />
+                            </div>
+                        <div class="footer-icon-block">
+                            <div class="footer-icons">
+                                <RadzenRating @bind-Value=@msg.Rating />
+                            </div>
+                            <div class="footer-submit">
+                                <RadzenIcon Icon="send" />
+                            </div>
+                        </div>
+                        </div>
+                </div>
+            </div>
+        }
     </div>
 </div>
 <div class="user-input">
