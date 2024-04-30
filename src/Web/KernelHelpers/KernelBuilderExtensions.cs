@@ -6,6 +6,8 @@ using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.KernelHelpers;
 using FunctionFilters;
+using Microsoft.KernelMemory.MemoryStorage;
+using Microsoft.SemanticKernel.Embeddings;
 using Options;
 using Services;
 
@@ -25,6 +27,11 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
 
     var memoryBuilder = new KernelMemoryBuilder();
+    memoryBuilder.Services.AddAzureOpenAITextEmbeddingGeneration(
+        deploymentName: openAiOptions.EmbeddingDeploymentName,
+        endpoint: openAiOptions.Endpoint,
+        apiKey: openAiOptions.ApiKey
+    );
     memoryBuilder.WithAzureOpenAITextGeneration(new AzureOpenAIConfig
     {
         APIKey = openAiOptions.ApiKey,
@@ -48,6 +55,11 @@ public static class KernelBuilderExtensions
         Auth = AzureAISearchConfig.AuthTypes.APIKey
     });    
     var kernelBuilder = Kernel.CreateBuilder();
+    kernelBuilder.AddAzureOpenAITextEmbeddingGeneration(
+        deploymentName: openAiOptions.EmbeddingDeploymentName,
+        endpoint: openAiOptions.Endpoint,
+        apiKey: openAiOptions.ApiKey
+    );
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
         endpoint: openAiOptions.Endpoint,
@@ -55,7 +67,16 @@ public static class KernelBuilderExtensions
     );
 
     var memory = memoryBuilder.Build();
-    services.AddTransient(provider => memory);
+    kernelBuilder.Services.AddAzureAISearchAsMemoryDb(new AzureAISearchConfig
+    {
+        APIKey = openAiOptions.SearchApiKey,
+        Endpoint = openAiOptions.SearchEndpoint,
+    });
+    kernelBuilder.Services.AddAzureOpenAITextEmbeddingGeneration(
+        deploymentName: openAiOptions.EmbeddingDeploymentName,
+        endpoint: openAiOptions.Endpoint,
+        apiKey: openAiOptions.ApiKey
+    );
     kernelBuilder.Services.AddTransient(provider => memory);
     kernelBuilder.Services.AddSingleton<ChatSessionService>();
     kernelBuilder.Plugins
@@ -68,7 +89,9 @@ public static class KernelBuilderExtensions
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
     kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
-    kernel.FunctionFilters.Add(new PromptBankFunctionFilter(memory));
+    kernel.FunctionFilters.Add(new PromptBankFunctionFilter(kernel,
+      kernel.Services.GetRequiredService<ITextEmbeddingGenerationService>(),
+      kernel.Services.GetRequiredService<IMemoryDb>()));
     services.AddTransient(_ => kernel);
   }
 }

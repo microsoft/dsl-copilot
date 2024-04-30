@@ -1,9 +1,13 @@
-using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.MemoryStorage;
 using Microsoft.SemanticKernel;
+using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.FunctionFilters;
-public class PromptBankFunctionFilter(IKernelMemory memory)
+public class PromptBankFunctionFilter(
+    Kernel kernel,
+    ITextEmbeddingGenerationService textEmbeddingService,
+    IMemoryDb memory, int exampleCount = 3)
     : FunctionFilterBase("generateCode")
 {
     protected override async Task OnFunctionInvokedAsync(FunctionInvokedContext context, CancellationToken token)
@@ -15,17 +19,37 @@ public class PromptBankFunctionFilter(IKernelMemory memory)
         var result = context.Result.GetValue<string>();
         Guard.IsNotNull(result, nameof(result));
 
-        var searchResult = await memory
-            .SearchAsync(input, index: "promptBank", limit: 1, minRelevance: 0.5, cancellationToken: token)
-            .ConfigureAwait(false);
-        if (searchResult.NoResult)
+        var similarities = memory.GetSimilarListAsync("prompt-bank", input, cancellationToken: token)
+            .OrderByDescending(x => x.Item2)
+            .Where(x => x.Item2 > 0.5)
+            .Select(x => x.Item1)
+            .Take(exampleCount);
+        var hasAny = await similarities.AnyAsync(token);
+        if (hasAny)
         {
-            await memory
-                .ImportTextAsync($"prompt > {input}{Environment.NewLine}response > {result}",
-                    tags: new() { { "language", language } },
-                    index: "promptBank",
-                    cancellationToken: token)
-                .ConfigureAwait(false);
+            await foreach (var item in similarities)
+            {
+            }
+        }
+        else
+        {
+            await memory.CreateIndexAsync("prompt-bank", 10, token);
+            var embedding = await textEmbeddingService.GenerateEmbeddingAsync(input, kernel, token);
+            await memory.UpsertAsync("prompt-bank", new MemoryRecord
+            {
+
+                Id = Guid.NewGuid().ToString(),
+                Vector = embedding,
+                Tags =
+                {
+                    ["language"] = [language]
+                },
+                Payload =
+                {
+                    ["prompt"] = input,
+                    ["response"] = result
+                }
+            }, token);
         }
     }
 }

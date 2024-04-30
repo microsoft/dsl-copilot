@@ -32,10 +32,10 @@
 	"forwardPorts": [17105, 15229],
 	"portsAttributes": {
 			"17105": {
-				"protocol": "https"
+				"protocol": "http"
 			},
 			"15229": {
-				"protocol": "http"
+				"protocol": "https"
 			}
 	}
 
