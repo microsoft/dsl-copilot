@@ -8,7 +8,7 @@ public class DslAIService(
   ChatSessionIdService chatSessionIdService,
   ChatSessionService chatSessionService)
 {
-  public async Task<string> AskAI(string userMessage, string antlrDef, CancellationToken cancellationToken)
+  public async Task<string> AskAI(string userMessage, string language, string antlrDef, CancellationToken cancellationToken)
   {
     var chatSessionId = chatSessionIdService.GetChatSessionId();
     var chatHistory = chatSessionService.GetChatSession(chatSessionId);
@@ -29,6 +29,7 @@ public class DslAIService(
       {
         { "input", userMessage },
         { "history", string.Join(Environment.NewLine, chatHistory) },
+        { "language", language },
         { "grammar", antlrDef },
         { "fewShotExamples", fewShotExamples },
         { "chatSessionId", chatSessionId },

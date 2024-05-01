@@ -1,13 +1,15 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static System.Environment;
 
 namespace DslCopilot.Web.Validators;
-public static class CSharpCodeValidator
+public class CSharpCodeValidator : ICodeValidator
 {
-  public static CodeValidationResult ValidateCode(string input)
+  public string Name => nameof(CSharpCodeValidator);
+
+  public CodeValidationResult ValidateCode(string input)
   {
     CodeValidationResult? result;
     try

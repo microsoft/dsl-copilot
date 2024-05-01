@@ -28,6 +28,13 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
       return;
     }
 
+    var language = context.Arguments["language"]?.ToString();
+    if (string.IsNullOrEmpty(language))
+    {
+      return;
+    }
+
+
     var code = context.Result.GetValue<string>();
     if (string.IsNullOrEmpty(code))
     {
@@ -35,7 +42,10 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
       return;
     }
 
-    var result = CSharpCodeValidator.ValidateCode(code);
+    var codeValidator = CodeValidatorFactory.GetValidator(language);
+    consoleService.WriteToConsole(chatSessionId, $"Validating generated code with {codeValidator.Name}");
+
+    var result = codeValidator.ValidateCode(code);
     if (!result.IsValid)
     {
       _numRetries.TryAdd(operationId, 0);
