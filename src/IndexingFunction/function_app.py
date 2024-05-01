@@ -5,31 +5,28 @@ import uuid
 import azure.functions as func
 from openai import AzureOpenAI
 from azure.identity import DefaultAzureCredential
-from azure.core.credentials import AzureKeyCredential
 from azure.storage.blob import BlobClient
 from azure.search.documents.indexes import SearchIndexClient
-from azure.search.documents import SearchClient
 from azure.search.documents.indexes.models import SearchIndex
 from azure.search.documents.indexes.models import (
-    ComplexField,
-    CorsOptions,
     SearchIndex,
-    ScoringProfile,
     SearchFieldDataType,
     SimpleField,
     VectorSearch,
     SearchField,
     SearchableField,
-    VectorSearchAlgorithmConfiguration,
     VectorSearchProfile,
     HnswAlgorithmConfiguration
 )
+
+import yaml
 from llama_index.vector_stores.azureaisearch import AzureAISearchVectorStore
 from llama_index.vector_stores.azureaisearch import IndexManagement
 from llama_index.core.settings import Settings
 from llama_index.readers.azstorage_blob import AzStorageBlobReader
 from llama_index.embeddings.azure_openai import AzureOpenAIEmbedding
 
+from search_client_factory import SearchClientFactory
 from llama_index_service import LlamaIndexService
 
 app = func.FunctionApp()
@@ -63,23 +60,11 @@ def blob_trigger(indexBlob: func.InputStream):
 
     __move_index_blob(indexBlob, blob_name)
 
-# Create the Azure AI Search Index
-def __create_search_index__() -> SearchIndexClient: 
-    search_service_endpoint: str = os.environ["AISearchEndpoint"]
-    search_service_api_key: str = os.environ["AISearchAPIKey"]
-    credential = AzureKeyCredential(search_service_api_key)
-    
-    logging.info(f"Creating Azure AI Search Index: {search_service_endpoint}")
-
-    return SearchIndexClient(
-        endpoint=search_service_endpoint,
-        credential=credential,
-    )
-
 # Create the Azure AI Search Vector Store
 def __create_vector_store__(search_index_name: str) -> AzureAISearchVectorStore:
-    
-    index_client: SearchIndexClient = __create_search_index__()
+    search_service_endpoint: str = os.environ["AISearchEndpoint"]
+    search_service_api_key: str = os.environ["AISearchAPIKey"]
+    index_client: SearchIndexClient =  SearchClientFactory(search_service_endpoint, search_service_api_key).create_search_index_client()
     metadata_fields = {}
 
     logging.info(f"Creating Azure AI Search Vector Store: {search_index_name}")
@@ -148,23 +133,25 @@ def __move_index_blob(indexBlob: func.InputStream, blob_name: str):
     logging.info(f"Deleting index blob {blob_name} from container {source_container_name}.")
     source_service_client.delete_blob()
 
-@app.blob_trigger(arg_name="myblob", path="code-content",
+@app.blob_trigger(arg_name="codeExamples", path="code-content",
                                connection="function_storage_connection") 
-def code_indexing(myblob: func.InputStream):
-    logging.info(f"Python blob trigger function processed blob"
-                f"Name: {myblob.name}"
-                f"Blob Size: {myblob.length} bytes")
-    
-    indexName = os.environ["AISeachCodeIndexName"]
-    searchIndexClient = __create_search_index__()
-    indexes = searchIndexClient.list_index_names()
-    
-    if indexName not in indexes:
-        __create_code_index(searchIndexClient, indexName)
+def code_indexing(codeExamples: func.InputStream):
+   
+    dsl_examples = yaml.safe_load(codeExamples)
+    prompts = dsl_examples['prompts']
 
-    __insert_code_documents(searchIndexClient)
+    index_name = os.environ["AISeachCodeIndexName"]
+    search_service_endpoint: str = os.environ["AISearchEndpoint"]
+    search_service_api_key: str = os.environ["AISearchAPIKey"]
+    index_client: SearchIndexClient =  SearchClientFactory(search_service_endpoint, search_service_api_key).create_search_index_client()
+    indexes = index_client.list_index_names()
+    
+    if index_name not in indexes:
+        __create_code_index(index_client, index_name)
 
-def __create_code_index(searchIndexClient: SearchIndexClient, indexName: str):
+    __insert_code_documents(index_client, prompts)
+
+def __create_code_index(index_client: SearchIndexClient, indexName: str):
     vector_search = VectorSearch(
         profiles=[VectorSearchProfile(name="vector-config", algorithm_configuration_name="algorithms-config")],
         algorithms=[HnswAlgorithmConfiguration(name="algorithms-config")],
@@ -181,9 +168,9 @@ def __create_code_index(searchIndexClient: SearchIndexClient, indexName: str):
         vector_search=vector_search,
     )
 
-    searchIndexClient.create_index(index)
+    index_client.create_index(index)
 
-def __insert_code_documents(searchIndexClient: SearchIndexClient):
+def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts):
     search_client = searchIndexClient.get_search_client(os.environ["AISeachCodeIndexName"])
     client = AzureOpenAI(
         azure_endpoint = os.environ["OpenAIEndpoint"], 
@@ -191,15 +178,17 @@ def __insert_code_documents(searchIndexClient: SearchIndexClient):
         api_version=os.environ["OpenAIAPIVersion"]
     )
     
-    document_id = str(uuid.uuid4())
-    embedding = client.embeddings.create(input="Hello Worl", model=os.environ["OpenAIEmbeddingModelName"]).data[0].embedding
-    DOCUMENT = {
-        "id": document_id,
-        "prompt": "Hello World",
-        "response": "Testing",
-        "embedding": embedding,
-    }
+    for prompt in prompts:
+        code_embedding = client.embeddings.create(input=prompt["prompt"], model=os.environ["OpenAIEmbeddingModelName"]).data[0].embedding
+        document_id = str(uuid.uuid4())
+        embedding = code_embedding
+        DOCUMENT = {
+            "id": document_id,
+            "prompt": prompt["prompt"],
+            "response": prompt["response"],
+            "embedding": embedding,
+        }
 
-    result = search_client.upload_documents(documents=[DOCUMENT])
-    logging.info(f"Upload of new document with id {document_id} succeeded: {result[0].succeeded}")
+        result = search_client.upload_documents(documents=[DOCUMENT])
+        logging.info(f"Upload of new document with id {document_id} succeeded: {result[0].succeeded}")
 
