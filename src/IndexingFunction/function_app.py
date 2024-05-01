@@ -139,6 +139,7 @@ def code_indexing(codeExamples: func.InputStream):
    
     dsl_examples = yaml.safe_load(codeExamples)
     prompts = dsl_examples['prompts']
+    language = dsl_examples['language']
 
     index_name = os.environ["AISeachCodeIndexName"]
     search_service_endpoint: str = os.environ["AISearchEndpoint"]
@@ -149,7 +150,7 @@ def code_indexing(codeExamples: func.InputStream):
     if index_name not in indexes:
         __create_code_index(index_client, index_name)
 
-    __insert_code_documents(index_client, prompts)
+    __insert_code_documents(index_client, prompts, language)
 
 def __create_code_index(index_client: SearchIndexClient, indexName: str):
     vector_search = VectorSearch(
@@ -162,6 +163,7 @@ def __create_code_index(index_client: SearchIndexClient, indexName: str):
             SimpleField(name="id", type=SearchFieldDataType.String, key=True, sortable=True, filterable=True, facetable=True),
             SearchableField(name="prompt", type=SearchFieldDataType.String),
             SimpleField(name="response", type=SearchFieldDataType.String),
+            SimpleField(name="language", type=SearchFieldDataType.String, filterable=True, facetable=True, sortable=True),
             SearchField(name="embedding", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
                         searchable=True, vector_search_dimensions=1536, vector_search_profile_name="vector-config"),
         ],
@@ -170,7 +172,7 @@ def __create_code_index(index_client: SearchIndexClient, indexName: str):
 
     index_client.create_index(index)
 
-def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts):
+def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts, language: str):
     search_client = searchIndexClient.get_search_client(os.environ["AISeachCodeIndexName"])
     client = AzureOpenAI(
         azure_endpoint = os.environ["OpenAIEndpoint"], 
@@ -186,9 +188,10 @@ def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts):
             "id": document_id,
             "prompt": prompt["prompt"],
             "response": prompt["response"],
+            "language": language,
             "embedding": embedding,
         }
 
-        result = search_client.upload_documents(documents=[DOCUMENT])
+        result = search_client.upload_documents(documents=[DOCUMENT], )
         logging.info(f"Upload of new document with id {document_id} succeeded: {result[0].succeeded}")
 
