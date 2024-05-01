@@ -25,13 +25,7 @@ public class PromptBankFunctionFilter(
             .Select(x => x.Item1)
             .Take(exampleCount);
         var hasAny = await similarities.AnyAsync(token);
-        if (hasAny)
-        {
-            await foreach (var item in similarities)
-            {
-            }
-        }
-        else
+        if (!hasAny)
         {
             await memory.CreateIndexAsync("prompt-bank", 10, token);
             var embedding = await textEmbeddingService.GenerateEmbeddingAsync(input, token);
