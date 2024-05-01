@@ -1,7 +1,6 @@
 using Microsoft.KernelMemory.AI;
 using Microsoft.KernelMemory.MemoryStorage;
 using Microsoft.SemanticKernel;
-using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.FunctionFilters;
