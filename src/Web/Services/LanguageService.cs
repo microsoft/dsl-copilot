@@ -22,8 +22,7 @@ public class LanguageService
     Guard.IsNotNull(value.ContainerName, nameof(value.ContainerName));
 
     StorageSharedKeyCredential storageSharedKeyCredential =
-      new(value.AccountName,
-        value.AccessKey);
+      new(value.AccountName, value.AccessKey);
     var blobServiceEndpoint = $"https://{value.AccountName}.blob.core.windows.net";
     _blobServiceClient = new(new(blobServiceEndpoint), storageSharedKeyCredential);
     _blobContainerClient = _blobServiceClient.GetBlobContainerClient(value.ContainerName);
@@ -37,7 +36,10 @@ public class LanguageService
 
     try
     {
-      var resultSegment = _blobContainerClient.GetBlobsByHierarchyAsync(delimiter: "/", cancellationToken: token).AsPages();
+      var resultSegment = _blobContainerClient
+        .GetBlobsByHierarchyAsync(delimiter: "/", cancellationToken: token)
+        .AsPages()
+        .ConfigureAwait(false);
       await foreach (var page in resultSegment)
       {
         foreach (var blobItem in page.Values)
@@ -74,16 +76,20 @@ public class LanguageService
     {
       var resultSegment = _blobContainerClient
         .GetBlobsByHierarchyAsync(prefix: language + "/", delimiter: "/", cancellationToken: token)
-        .AsPages();
+        .AsPages()
+        .ConfigureAwait(false);
 
       await foreach (var page in resultSegment)
       {
         foreach (var blobItem in page.Values)
         {
-            // put the blob contents into a string and return it
+          // put the blob contents into a string and return it
           if (!blobItem.IsPrefix && blobItem.Blob.Name.EndsWith(".g4"))
           {
-            var result = await _blobContainerClient.GetBlobClient(blobItem.Blob.Name).DownloadContentAsync(token);
+            var result = await _blobContainerClient
+              .GetBlobClient(blobItem.Blob.Name)
+              .DownloadContentAsync(token)
+              .ConfigureAwait(false);
             resultString += result.Value.Content.ToString();
           }
         }
