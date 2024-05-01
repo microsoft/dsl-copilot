@@ -1,12 +1,14 @@
 language: "csharp"
 prompts:
 - prompt: "Create a person POCO"
+  additionalDetails: "The greeting method should take a string parameter and write a greeting to the console."
   response: |
     class Person
     {
         public string Name { get; set; }
     }
 - prompt: "Create a person with a greeting method"
+  additionalDetails: "The greeting method should take a string parameter and write a greeting to the console."
   response: |
     class Person
     {
@@ -17,6 +19,7 @@ prompts:
         }
     }
 - prompt: "Create a person with a greeting method that writes to the console."
+  additionalDetails: "The greeting method should take a string parameter and write a greeting to the console."
   response: |
     class Person
     {
@@ -28,6 +31,7 @@ prompts:
     }
 
 - prompt: "Create a person object with a greeting method and use it to show a conversation between two people."
+  additionalDetails: "The greeting method should take a string parameter and write a greeting to the console."
   response: |
     namespace ExampleCode;
 

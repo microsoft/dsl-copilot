@@ -190,6 +190,7 @@ def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts, langu
 
         payload = {
             "prompt": prompt['prompt'],
+            "additionalDetails": prompt['prompt'],
             "response": prompt['response']
         }
         
