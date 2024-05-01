@@ -26,56 +26,27 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.SearchEndpoint, nameof(openAiOptions.SearchEndpoint));
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
     
-    var aoaiCompletionConfig = new AzureOpenAIConfig
-    {
-      APIKey = openAiOptions.ApiKey,
-      APIType = AzureOpenAIConfig.APITypes.ChatCompletion,
-      Endpoint = openAiOptions.Endpoint,
-      Auth = AzureOpenAIConfig.AuthTypes.APIKey,
-      Deployment = openAiOptions.CompletionDeploymentName
-    };
-    // TODO: Create a value copy clone of aoaiEmbeddingConfig
-    var aoaiEmbeddingConfig = new AzureOpenAIConfig
-    {
-      APIKey = openAiOptions.ApiKey,
-      APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
-      Endpoint = openAiOptions.Endpoint,
-      Auth = AzureOpenAIConfig.AuthTypes.APIKey,
-      Deployment = openAiOptions.EmbeddingDeploymentName
-    };
-    var aoaiSearchConfig = new AzureAISearchConfig
-    {
-      APIKey = openAiOptions.SearchApiKey,
-      Endpoint = openAiOptions.SearchEndpoint,
-      Auth = AzureAISearchConfig.AuthTypes.APIKey
-    };
-    var aoaiTextGenConfig = new AzureOpenAIConfig
-    {
-      APIKey = openAiOptions.ApiKey,
-      APIType = AzureOpenAIConfig.APITypes.TextCompletion,
-      Endpoint = openAiOptions.Endpoint,
-      Auth = AzureOpenAIConfig.AuthTypes.APIKey,
-      Deployment = openAiOptions.CompletionDeploymentName
-    };
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
         endpoint: openAiOptions.Endpoint,
         apiKey: openAiOptions.ApiKey
     );
+
+    var searchConfig = openAiOptions.ToSearchConfig();
     kernelBuilder.Plugins
       .AddFromType<ConversationSummaryPlugin>();
     kernelBuilder.Services
-      .AddAzureAISearchAsMemoryDb(aoaiSearchConfig)
+      .AddAzureAISearchAsMemoryDb(searchConfig)
       .AddSingleton<ChatSessionService>()
       .AddSingleton<PromptBankFunctionFilter>()
       .AddKernelMemory(memoryBuilder =>
       {
         var tokenizer = new DefaultGPTTokenizer();
         memoryBuilder
-          .WithAzureOpenAITextGeneration(aoaiTextGenConfig, tokenizer)
-          .WithAzureOpenAITextEmbeddingGeneration(aoaiEmbeddingConfig, tokenizer)
-          .WithAzureAISearchMemoryDb(aoaiSearchConfig)
+          .WithAzureOpenAITextGeneration(openAiOptions.ToTextGenConfig(), tokenizer)
+          .WithAzureOpenAITextEmbeddingGeneration(openAiOptions.ToEmbeddingConfig(), tokenizer)
+          .WithAzureAISearchMemoryDb(searchConfig)
           .WithSearchClientConfig(new() { MaxMatchesCount = 3, Temperature = 0.5, TopP = 1 });
       });
     var kernel = kernelBuilder.Build();
