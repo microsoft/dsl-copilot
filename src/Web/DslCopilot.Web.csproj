@@ -22,6 +22,7 @@
     <PackageReference Include="Microsoft.KernelMemory.MemoryDb.AzureAISearch" Version="0.3*" />
     <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.3*" />
     <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.3*" />
+    <PackageReference Include="Radzen.Blazor" Version="4.30.3" />
   </ItemGroup>
 
   <ItemGroup>
