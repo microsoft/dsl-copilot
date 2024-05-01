@@ -22,22 +22,24 @@ public class LanguageService
     Guard.IsNotNull(value.ContainerName, nameof(value.ContainerName));
 
     StorageSharedKeyCredential storageSharedKeyCredential =
-      new(value.AccountName,
-        value.AccessKey);
-    string blobServiceEndpoint = $"https://{value.AccountName}.blob.core.windows.net";
+      new(value.AccountName, value.AccessKey);
+    var blobServiceEndpoint = $"https://{value.AccountName}.blob.core.windows.net";
     _blobServiceClient = new(new(blobServiceEndpoint), storageSharedKeyCredential);
     _blobContainerClient = _blobServiceClient.GetBlobContainerClient(value.ContainerName);
     _cachedGrammars = [];
   }
 
   // The supported languages will be the "folders" at the top tier of the blob container
-  public async Task<List<string>> GetSupportedLanguages()
+  public async Task<List<string>> GetSupportedLanguages(CancellationToken token)
   {
     List<string> languages = [];
 
     try
     {
-      var resultSegment = _blobContainerClient.GetBlobsByHierarchyAsync(delimiter: "/").AsPages();
+      var resultSegment = _blobContainerClient
+        .GetBlobsByHierarchyAsync(delimiter: "/", cancellationToken: token)
+        .AsPages()
+        .ConfigureAwait(false);
       await foreach (var page in resultSegment)
       {
         foreach (var blobItem in page.Values)
@@ -61,7 +63,7 @@ public class LanguageService
   }
 
   // The grammar file will be an ANTLR (.g4) file in the language folder
-  public async Task<string> GetGrammarForLanguage(string language)
+  public async Task<string> GetGrammarForLanguage(string language, CancellationToken token)
   {
     var resultString = string.Empty;
 
@@ -72,16 +74,22 @@ public class LanguageService
 
     try
     {
-      var resultSegment = _blobContainerClient.GetBlobsByHierarchyAsync(prefix: language + "/", delimiter: "/").AsPages();
+      var resultSegment = _blobContainerClient
+        .GetBlobsByHierarchyAsync(prefix: language + "/", delimiter: "/", cancellationToken: token)
+        .AsPages()
+        .ConfigureAwait(false);
 
       await foreach (var page in resultSegment)
       {
         foreach (var blobItem in page.Values)
         {
-            // put the blob contents into a string and return it
+          // put the blob contents into a string and return it
           if (!blobItem.IsPrefix && blobItem.Blob.Name.EndsWith(".g4"))
           {
-            var result = await _blobContainerClient.GetBlobClient(blobItem.Blob.Name).DownloadContentAsync();
+            var result = await _blobContainerClient
+              .GetBlobClient(blobItem.Blob.Name)
+              .DownloadContentAsync(token)
+              .ConfigureAwait(false);
             resultString += result.Value.Content.ToString();
           }
         }

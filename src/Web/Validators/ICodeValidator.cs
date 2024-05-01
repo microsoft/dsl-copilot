@@ -1,8 +1,6 @@
-﻿namespace DslCopilot.Web.Validators
+﻿namespace DslCopilot.Web.Validators;
+public interface ICodeValidator
 {
-  public interface ICodeValidator
-  {
-    CodeValidationResult ValidateCode(string input);
-    string Name { get; }
-  }
+  CodeValidationResult ValidateCode(string input);
+  string Name { get; }
 }

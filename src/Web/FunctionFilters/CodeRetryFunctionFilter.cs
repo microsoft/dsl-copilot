@@ -3,19 +3,18 @@ using DslCopilot.Web.Validators;
 using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.FunctionFilters;
-public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, ConsoleService consoleService, Kernel kernel) : IFunctionFilter
+public class CodeRetryFunctionFilter(
+  ChatSessionService chatSessionService,
+  ConsoleService consoleService,
+  Kernel kernel)
+  : FunctionFilterBase("generateCode")
 {
   private readonly Dictionary<string, int> _numRetries = [];
 
-    private const int MAX_RETRIES = 3;
+  private const int MAX_RETRIES = 3;
 
-  public void OnFunctionInvoked(FunctionInvokedContext context)
+  protected override async Task OnFunctionInvokedAsync(FunctionInvokedContext context, CancellationToken token)
   {
-    if (context.Function.Name != "generateCode")
-    {
-      return;
-    }
-
     var chatSessionId = context.Arguments["chatSessionId"]?.ToString();
     if (string.IsNullOrEmpty(chatSessionId))
     {
@@ -54,7 +53,7 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
       consoleService.WriteToConsole(chatSessionId, $"Retrying... (Attempt {_numRetries[operationId]})");
 
       if (_numRetries[operationId] < MAX_RETRIES)
-      {      
+      {
         var chatSession = chatSessionService.GetChatSession(chatSessionId);
         chatSession.AddUserMessage("Unfortunately, this code contains the following errors:");
         foreach (var error in result.Errors)
@@ -67,7 +66,9 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
         context.Arguments["badCode"] = code;
 
         // re-invoke the function
-        var nextResult = context.Function.InvokeAsync(kernel, context.Arguments).GetAwaiter().GetResult();
+        var nextResult = await context.Function
+          .InvokeAsync(kernel, context.Arguments, token)
+          .ConfigureAwait(false);
         context.SetResultValue(nextResult.GetValue<string>());
       }
       else
@@ -80,22 +81,5 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
         context.SetResultValue(errorResponse);
       }
     }
-  }
-
-  public void OnFunctionInvoking(FunctionInvokingContext context)
-  {
-    if (context.Function.Name != "generateCode")
-    {
-      return;
-    }
-
-    var chatSessionId = context.Arguments["chatSessionId"]?.ToString();
-    if (string.IsNullOrEmpty(chatSessionId))
-    {
-      return;
-    }
-
-    consoleService.WriteToConsole(chatSessionId, "Running generateCode function...");
-
   }
 }

@@ -1,7 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static System.Environment;
 
 namespace DslCopilot.Web.Validators;
@@ -31,11 +30,11 @@ public class CSharpCodeValidator : ICodeValidator
   {
     CodeValidationResult result = new();
     code = code.ReplaceLineEndings(NewLine);
-    SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(code);
+    var syntaxTree = CSharpSyntaxTree.ParseText(code);
     var thisAssembly = typeof(CSharpCodeValidator).Assembly;
     var referencedAssemblies = thisAssembly.GetReferencedAssemblies()
         .Select(x => MetadataReference.CreateFromFile(Assembly.Load(x).Location));
-    CSharpCompilation compilation = CSharpCompilation.Create("ValidationCompilation")
+    var compilation = CSharpCompilation.Create("ValidationCompilation")
         .AddReferences(referencedAssemblies)
         .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
         .WithOptions(new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))

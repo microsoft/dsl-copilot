@@ -21,10 +21,8 @@ public class DslAIService(
     }
 
     chatHistory.AddUserMessage(userMessage);
-    kernel.Data["chatSessionId"] = chatSessionId;
-    kernel.Data["operationId"] = operationId;
 
-    var fewShotExamples = await GetFewShotExamples(userMessage, cancellationToken);
+    var fewShotExamples = await GetFewShotExamples(userMessage, cancellationToken).ConfigureAwait(false);
     var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
       {
         { "input", userMessage },
@@ -33,16 +31,21 @@ public class DslAIService(
         { "grammar", antlrDef },
         { "fewShotExamples", fewShotExamples },
         { "chatSessionId", chatSessionId },
-        { "operationId", operationId }
-      }, cancellationToken);
+        { "operationId", operationId },
+        { "language", language }
+      }, cancellationToken).ConfigureAwait(false);
 
     return result.GetValue<string>() ?? string.Empty;
   }
 
   private async Task<string> GetFewShotExamples(string input, CancellationToken cancellationToken)
   {
-    IEnumerable<string?> examples = await File.ReadAllLinesAsync("examples/csharp.md", cancellationToken);
-    var memories = await memory.SearchAsync(input, limit: 3, cancellationToken: cancellationToken);
+    var examples = await File
+      .ReadAllLinesAsync("examples/csharp.md", cancellationToken)
+      .ConfigureAwait(false);
+    var memories = await memory
+      .SearchAsync(input, limit: 3, cancellationToken: cancellationToken)
+      .ConfigureAwait(false);
     var results = examples.Concat([memories.ToString()]).Where(x => x != null).Cast<string>();
     return string.Join(Environment.NewLine, results);
   }

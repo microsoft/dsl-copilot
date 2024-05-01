@@ -1,6 +1,7 @@
 ﻿@using DslCopilot.Web.Services
 @inject LanguageService LanguageService
-
+@inject ConsoleService ConsoleService;
+@inject ChatSessionIdService ChatSessionIdService;
 <label><b>Language:</b></label>
 <div class="language-selector">
     <select class="form-control" id="languageSelector" @onchange="ChangeLanguage">
@@ -12,34 +13,42 @@
 </div>
 
 @code {
+    private CancellationTokenSource _cts = new();
 
-  [Parameter]
-  public EventCallback<string> OnLanguageChanged { get; set; }
+    [Parameter]
+    public EventCallback<string> OnLanguageChanged { get; set; }
 
-  private List<string> Languages = new List<string>();
+    private List<string> Languages = [];
 
-  private string _selectedLanguage = string.Empty;
-  private string SelectedLanguage { 
-    get
-    {
-      return _selectedLanguage;
+    private string _selectedLanguage = string.Empty;
+    private string SelectedLanguage { 
+        get
+        {
+            return _selectedLanguage;
+        }
+        set
+        {
+            _selectedLanguage = value;
+            InvokeAsync(async () => await OnLanguageChanged.InvokeAsync(_selectedLanguage))
+              .GetAwaiter()
+              .GetResult();
+        }
     }
-    set
+
+    protected override async Task OnInitializedAsync()
     {
-        _selectedLanguage = value;
-        OnLanguageChanged.InvokeAsync(_selectedLanguage);
+        var sessionId = ChatSessionIdService.GetChatSessionId();
+        ConsoleService.WriteToConsole(sessionId, $"(LanguageService) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
+        Languages = await LanguageService
+          .GetSupportedLanguages(_cts.Token);
+        ConsoleService.WriteToConsole(sessionId, $"(LanguageService) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
+        SelectedLanguage = Languages[0];
+
+        ConsoleService.WriteToConsole(sessionId, $"(LanguageService2) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
+        await base.OnInitializedAsync();
+        ConsoleService.WriteToConsole(sessionId, $"(LanguageService2) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
     }
-  }
 
-  protected override async Task OnInitializedAsync()
-  {
-    Languages = await LanguageService.GetSupportedLanguages();
-    SelectedLanguage = Languages[0];
-    await base.OnInitializedAsync();
-  }
-
-  private void ChangeLanguage(ChangeEventArgs e)
-  {
-      SelectedLanguage = e.Value?.ToString() ?? string.Empty;
-  }
+    private void ChangeLanguage(ChangeEventArgs e)
+      => SelectedLanguage = e.Value?.ToString() ?? string.Empty;
 }

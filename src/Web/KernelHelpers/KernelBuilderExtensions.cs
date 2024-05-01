@@ -1,17 +1,20 @@
-﻿using DslCopilot.Web.FunctionFilters;
-using DslCopilot.Web.Options;
-using DslCopilot.Web.Services;
-using Microsoft.KernelMemory;
+﻿using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.AI.OpenAI;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
 using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
 using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.KernelHelpers;
+using Options;
+using Services;
+using FunctionFilters;
+
 public static class KernelBuilderExtensions
 {
-  public static void AddKernelWithCodeGenFilters(this IServiceCollection services,
-    ConsoleService consoleService, 
+  public static void AddKernelWithCodeGenFilters(
+    this IServiceCollection services,
+    ConsoleService consoleService,
     ChatSessionService chatSessionService,
     AzureOpenAIOptions? openAiOptions)
   {
@@ -20,24 +23,9 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.CompletionDeploymentName, nameof(openAiOptions.CompletionDeploymentName));
     Guard.IsNotNull(openAiOptions.Endpoint, nameof(openAiOptions.Endpoint));
     Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
-
-    var memoryBuilder = new KernelMemoryBuilder();
-    memoryBuilder.WithAzureOpenAITextGeneration(new AzureOpenAIConfig
-    {
-        APIKey = openAiOptions.ApiKey,
-        APIType = AzureOpenAIConfig.APITypes.ChatCompletion,
-        Endpoint = openAiOptions.Endpoint,
-        Auth = AzureOpenAIConfig.AuthTypes.APIKey,
-        Deployment = openAiOptions.CompletionDeploymentName
-    });
-    memoryBuilder.WithAzureOpenAITextEmbeddingGeneration(new AzureOpenAIConfig
-    {
-        APIKey = openAiOptions.ApiKey,
-        APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
-        Endpoint = openAiOptions.Endpoint,
-        Auth = AzureOpenAIConfig.AuthTypes.APIKey,
-        Deployment = openAiOptions.EmbeddingDeploymentName
-    });
+    Guard.IsNotNull(openAiOptions.SearchEndpoint, nameof(openAiOptions.SearchEndpoint));
+    Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
+    
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
@@ -45,13 +33,22 @@ public static class KernelBuilderExtensions
         apiKey: openAiOptions.ApiKey
     );
 
-    var memory = memoryBuilder.Build();
-    services.AddTransient(provider => memory);
-    kernelBuilder.Services.AddTransient(provider => memory);
-    kernelBuilder.Services.AddSingleton<ChatSessionService>();
+    var searchConfig = openAiOptions.ToSearchConfig();
     kernelBuilder.Plugins
       .AddFromType<ConversationSummaryPlugin>();
-
+    kernelBuilder.Services
+      .AddAzureAISearchAsMemoryDb(searchConfig)
+      .AddSingleton<ChatSessionService>()
+      .AddSingleton<PromptBankFunctionFilter>()
+      .AddKernelMemory(memoryBuilder =>
+      {
+        var tokenizer = new DefaultGPTTokenizer();
+        memoryBuilder
+          .WithAzureOpenAITextGeneration(openAiOptions.ToTextGenConfig(), tokenizer)
+          .WithAzureOpenAITextEmbeddingGeneration(openAiOptions.ToEmbeddingConfig(), tokenizer)
+          .WithAzureAISearchMemoryDb(searchConfig)
+          .WithSearchClientConfig(new() { MaxMatchesCount = 3, Temperature = 0.5, TopP = 1 });
+      });
     var kernel = kernelBuilder.Build();
     kernel.Plugins.AddFromFunctions("yaml_plugins", [
       kernel.CreateFunctionFromPromptYaml(
@@ -59,6 +56,8 @@ public static class KernelBuilderExtensions
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
     kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
-    services.AddTransient(_ => kernel);
+    services
+      .AddTransient(_ => kernel)
+      .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>());
   }
 }

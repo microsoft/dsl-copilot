@@ -31,7 +31,8 @@
         "sourceFileMap": {
             "/Views": "${workspaceFolder}/Views"
         },
-        "launchSettingsProfile": "src/Web/Properties/launchSettings.json"
+        "launchSettingsFilePath": "${workspaceFolder}/src/Web/Properties/launchSettings.json",
+        "launchSettingsProfile": "https"
     },
     {
         "name": ".NET Core Attach",
