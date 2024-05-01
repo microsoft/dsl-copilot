@@ -1,3 +1,4 @@
+using Microsoft.KernelMemory.AI;
 using Microsoft.KernelMemory.MemoryStorage;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Embeddings;
@@ -5,8 +6,7 @@ using Microsoft.Toolkit.Diagnostics;
 
 namespace DslCopilot.Web.FunctionFilters;
 public class PromptBankFunctionFilter(
-    Kernel kernel,
-    ITextEmbeddingGenerationService textEmbeddingService,
+    ITextEmbeddingGenerator textEmbeddingService,
     IMemoryDb memory, int exampleCount = 3)
     : FunctionFilterBase("generateCode")
 {
@@ -34,7 +34,7 @@ public class PromptBankFunctionFilter(
         else
         {
             await memory.CreateIndexAsync("prompt-bank", 10, token);
-            var embedding = await textEmbeddingService.GenerateEmbeddingAsync(input, kernel, token);
+            var embedding = await textEmbeddingService.GenerateEmbeddingAsync(input, token);
             await memory.UpsertAsync("prompt-bank", new MemoryRecord
             {
 
