@@ -7,14 +7,43 @@
 @implements IDisposable
 
 <div class="chat-container">
+
     <div class="chat-message-container">
         @foreach (var msg in chatMessages)
-    {
-        <div class="chat-input">@msg.Message (@msg.SelectedLanguage)</div>
-        <div class="chat-response">
-            <pre>@(msg.Response)</pre>
-        </div>
-    }
+        {
+            <div class="chat-messge-container">
+                <div class="chat-bubble-input">
+                    <div class="">@msg.Message (@msg.SelectedLanguage)</div>
+                </div>
+            </div>
+
+             <div class="chat-messge-container" style="visibility: @(msg.Response is not null && msg.Response != string.Empty ? "visible" : "hidden")">
+                <div class="chat-bubble-response">
+                        <div class="chat-response">
+                            <pre>@(msg.Response)</pre>
+                        </div>
+                        <div class="chat-bubble-footer">
+                            <div>
+                                Code Comments:
+                                <RadzenTextArea class="w-100" aria-label="TextArea" @bind-Value=@msg.CodeComments />
+                            </div>
+                        <div class="footer-icon-block">
+                            <div class="footer-icons">
+                                Code Rating:
+                                <RadzenToggleButton Click=@(args => OnClick(true, msg)) Icon="thumb_up" ButtonStyle="ButtonStyle.Light" Shade="Shade.Light"
+                                                    ToggleShade="Shade.Dark" @bind-Value=@msg.IsValidResponse />
+                                
+                                <RadzenToggleButton Click=@(args => OnClick(false, msg)) Icon="thumb_down" ButtonStyle="ButtonStyle.Light" Shade="Shade.Light"
+                                                    ToggleShade="Shade.Dark" @bind-Value=@msg.IsInValidResponse />
+                            </div>
+                            <div class="footer-submit">
+                                <RadzenButton Variant="Variant.Text" Icon="send" ButtonStyle="ButtonStyle.Primary" />
+                            </div>
+                        </div>
+                        </div>
+                </div>
+            </div>
+        }
     </div>
 </div>
 <div class="user-input">
@@ -32,66 +61,73 @@
 
 
 @code {
-  private string message = string.Empty;
-  private IList<ChatMessage> chatMessages = new List<ChatMessage>();
+    private string message = string.Empty;
+    private IList<ChatMessage> chatMessages = new List<ChatMessage>();
 
-  private string selectedLanguage = "(none)";
+    private string selectedLanguage = "(none)";
 
-  private string SpinnerVisibility = "hidden";
+    private string SpinnerVisibility = "hidden";
 
-  private CancellationTokenSource _cts = new();
+    private CancellationTokenSource _cts = new();
 
-  private DslDef MyDsl = new DslDef
+    private DslDef MyDsl = new DslDef
     {
       Name = "MyDsl"
     };
 
 
-  private async Task OnLanguageChanged(string language)
-  {
-    selectedLanguage = language;
-    var grammarFile = await LanguageService.GetGrammarForLanguage(selectedLanguage);
-    MyDsl.AntlrDef = grammarFile;
-  }
-
-  private async Task CheckForEnter(KeyboardEventArgs e)
-  {
-    if (e.Key == "Enter")
+    private async Task OnLanguageChanged(string language)
     {
-      await SendMessage();
+        selectedLanguage = language;
+        var grammarFile = await LanguageService.GetGrammarForLanguage(selectedLanguage);
+        MyDsl.AntlrDef = grammarFile;
     }
-  }
 
-  private async Task SendMessage()
-  {
+    private async Task CheckForEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await SendMessage();
+        }
+    }
 
-    var newMessage = new ChatMessage()
+    private async Task SendMessage()
+    {
+
+        var newMessage = new ChatMessage()
       {
         Message = message,
         Response = string.Empty,
         SelectedLanguage = selectedLanguage
       };
 
-    chatMessages.Add(newMessage);
+        chatMessages.Add(newMessage);
 
-    // Clear the input field
-    message = string.Empty;
+        // Clear the input field
+        message = string.Empty;
 
-    // Call DslAIService to send chat message
-    SpinnerVisibility = "visible";
-    newMessage.Response = await AIService.AskAI(newMessage.Message, MyDsl.AntlrDef, _cts.Token);
+        // Call DslAIService to send chat message
+        SpinnerVisibility = "visible";
+        newMessage.Response = await AIService.AskAI(newMessage.Message, MyDsl.AntlrDef, _cts.Token);
 
-    // await foreach (var chunk in response)
-    // {
-    //   responseString += chunk;
-    //   newMessage.Response = Markdig.Markdown.ToHtml(responseString);
-    //   await InvokeAsync(StateHasChanged);
-    // }
+        // await foreach (var chunk in response)
+        // {
+        //   responseString += chunk;
+        //   newMessage.Response = Markdig.Markdown.ToHtml(responseString);
+        //   await InvokeAsync(StateHasChanged);
+        // }
 
-    SpinnerVisibility = "hidden";
-    await InvokeAsync(StateHasChanged);
+        SpinnerVisibility = "hidden";
+        await InvokeAsync(StateHasChanged);
 
-  }
+    }
+
+    private void OnClick(bool isValidResponse, ChatMessage chatMessage)
+    {
+        chatMessage.IsValidResponse = isValidResponse;
+        chatMessage.IsInValidResponse = !isValidResponse!;
+    }
+
 
   public void Dispose()
   {
