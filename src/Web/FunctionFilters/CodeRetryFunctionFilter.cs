@@ -35,7 +35,10 @@ public class CodeRetryFunctionFilter(ChatSessionService chatSessionService, Cons
       return;
     }
 
-    var result = CSharpCodeValidator.ValidateCode(code);
+    var codeValidator = CodeValidatorFactory.GetValidator("csharp");
+    consoleService.WriteToConsole(chatSessionId, $"Validating generated code with {codeValidator.Name}");
+
+    var result = codeValidator.ValidateCode(code);
     if (!result.IsValid)
     {
       _numRetries.TryAdd(operationId, 0);
