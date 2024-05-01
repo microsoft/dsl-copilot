@@ -1,6 +1,7 @@
 import logging
 import os
 import uuid
+import json
 
 import azure.functions as func
 from openai import AzureOpenAI
@@ -16,7 +17,8 @@ from azure.search.documents.indexes.models import (
     SearchField,
     SearchableField,
     VectorSearchProfile,
-    HnswAlgorithmConfiguration
+    HnswAlgorithmConfiguration,
+    HnswParameters
 )
 
 import yaml
@@ -153,17 +155,17 @@ def code_indexing(codeExamples: func.InputStream):
     __insert_code_documents(index_client, prompts, language)
 
 def __create_code_index(index_client: SearchIndexClient, indexName: str):
+    hnsw_parameters = HnswParameters(metric= "cosine")
     vector_search = VectorSearch(
         profiles=[VectorSearchProfile(name="vector-config", algorithm_configuration_name="algorithms-config")],
-        algorithms=[HnswAlgorithmConfiguration(name="algorithms-config")],
+        algorithms=[HnswAlgorithmConfiguration(name="algorithms-config", parameters=hnsw_parameters)],
     )
     index = SearchIndex(
         name=os.environ["AISeachCodeIndexName"],
         fields=[
-            SimpleField(name="id", type=SearchFieldDataType.String, key=True, sortable=True, filterable=True, facetable=True),
-            SearchableField(name="prompt", type=SearchFieldDataType.String),
-            SimpleField(name="response", type=SearchFieldDataType.String),
-            SimpleField(name="language", type=SearchFieldDataType.String, filterable=True, facetable=True, sortable=True),
+            SearchField(name="id", type=SearchFieldDataType.String, key=True, searchable=True, filterable=True, sortable=False, facetable=False),
+            SimpleField(name="tags",  type=SearchFieldDataType.Collection(SearchFieldDataType.String), filterable=True),
+            SearchField(name="payload", type=SearchFieldDataType.String, filterable=False, searchable=True, sortable=False, facetable=False),
             SearchField(name="embedding", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
                         searchable=True, vector_search_dimensions=1536, vector_search_profile_name="vector-config"),
         ],
@@ -179,16 +181,22 @@ def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts, langu
         api_key=os.environ["OpenAIAPIKey"],  
         api_version=os.environ["OpenAIAPIVersion"]
     )
+
     
     for prompt in prompts:
         code_embedding = client.embeddings.create(input=prompt["prompt"], model=os.environ["OpenAIEmbeddingModelName"]).data[0].embedding
         document_id = str(uuid.uuid4())
         embedding = code_embedding
+
+        payload = {
+            "prompt": prompt['prompt'],
+            "response": prompt['response']
+        }
+        
         DOCUMENT = {
             "id": document_id,
-            "prompt": prompt["prompt"],
-            "response": prompt["response"],
-            "language": language,
+            "tags": [f"language:{language}"],
+            "payload": json.dumps(payload),
             "embedding": embedding,
         }
 
