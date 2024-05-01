@@ -82,11 +82,4 @@ public class CodeRetryFunctionFilter(
       }
     }
   }
-
-  private static CodeValidationResult GetCodeValidationResults(string language, string code) => language switch
-  {
-    "csharp" => CSharpCodeValidator.ValidateCode(code),
-    //TODO: Add more languages
-    _ => new() { IsValid = true }
-  };
 }

@@ -10,5 +10,5 @@ public class ChatMessage
 
   public bool IsInValidResponse { get; set; }
 
-  public string CodeComments { get; set; }
+  public string? CodeComments { get; set; }
 }
