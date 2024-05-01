@@ -108,14 +108,7 @@
 
         // Call DslAIService to send chat message
         SpinnerVisibility = "visible";
-        newMessage.Response = await AIService.AskAI(newMessage.Message, MyDsl.AntlrDef, _cts.Token);
-
-        // await foreach (var chunk in response)
-        // {
-        //   responseString += chunk;
-        //   newMessage.Response = Markdig.Markdown.ToHtml(responseString);
-        //   await InvokeAsync(StateHasChanged);
-        // }
+        newMessage.Response = await AIService.AskAI(newMessage.Message, selectedLanguage, MyDsl.AntlrDef, _cts.Token);
 
         SpinnerVisibility = "hidden";
         await InvokeAsync(StateHasChanged);
