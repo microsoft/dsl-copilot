@@ -1,13 +1,15 @@
 ﻿@page "/"
 @rendermode InteractiveServer
-@using DslCopilot.Web.Services
-@using DslCopilot.Web.Data
-@using Radzen.Blazor
-@inject DslAIService AIService
-@inject LanguageService LanguageService
+@using DslCopilot.Web.Services;
+@using DslCopilot.Web.Data;
+@using Microsoft.KernelMemory.AI;
+@using Radzen.Blazor;
+@inject DslAIService AIService;
+@inject LanguageService LanguageService;
 @inject ConsoleService ConsoleService;
 @inject ChatSessionIdService ChatSessionIdService;
-@implements IDisposable
+@inject PromptBankService promptBank
+@implements IDisposable;
 
 <div class="chat-container">
 
@@ -33,11 +35,21 @@
                           <div class="footer-icon-block">
                               <div class="footer-icons">
                                   Code Rating:
-                                  <RadzenToggleButton Click=@(args => OnClick(true, msg)) Icon="thumb_up" ButtonStyle="ButtonStyle.Light" Shade="Shade.Light"
-                                                      ToggleShade="Shade.Dark" @bind-Value=@msg.IsValidResponse />
+                                  <RadzenToggleButton
+                                      Click=@(args => OnClick(true, msg))
+                                      Icon="thumb_up"
+                                      ButtonStyle="ButtonStyle.Light"
+                                      Shade="Shade.Light"
+                                      ToggleShade="Shade.Dark"
+                                      @bind-Value=@msg.IsValidResponse />
 
-                                  <RadzenToggleButton Click=@(args => OnClick(false, msg)) Icon="thumb_down" ButtonStyle="ButtonStyle.Light" Shade="Shade.Light"
-                                                      ToggleShade="Shade.Dark" @bind-Value=@msg.IsInValidResponse />
+                                  <RadzenToggleButton
+                                    Click=@(args => OnClick(false, msg))
+                                    Icon="thumb_down"
+                                    ButtonStyle="ButtonStyle.Light"
+                                    Shade="Shade.Light"
+                                    ToggleShade="Shade.Dark"
+                                    @bind-Value=@msg.IsInValidResponse />
                               </div>
                               <div class="footer-submit">
                                   <RadzenButton Variant="Variant.Text" Icon="send" ButtonStyle="ButtonStyle.Primary" />
@@ -125,8 +137,14 @@
   {
     chatMessage.IsValidResponse = isValidResponse;
     chatMessage.IsInValidResponse = !isValidResponse!;
+    InvokeAsync(async () => await promptBank.Upsert("prompt-bank",
+      chatMessage.Message,
+      chatMessage.Response, new()
+      {
+        ["language"] = [ chatMessage.SelectedLanguage ],
+        ["rating"] = [ isValidResponse ? "thumbs-up" : "thumbs-down" ]
+      }, _cts.Token));
   }
-
 
   public void Dispose()
   {
