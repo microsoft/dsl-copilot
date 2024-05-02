@@ -29,24 +29,17 @@
         set
         {
             _selectedLanguage = value;
-            InvokeAsync(async () => await OnLanguageChanged.InvokeAsync(_selectedLanguage))
-              .GetAwaiter()
-              .GetResult();
+            OnLanguageChanged.InvokeAsync(_selectedLanguage);
         }
     }
 
     protected override async Task OnInitializedAsync()
     {
         var sessionId = ChatSessionIdService.GetChatSessionId();
-        ConsoleService.WriteToConsole(sessionId, $"(LanguageService) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
         Languages = await LanguageService
           .GetSupportedLanguages(_cts.Token);
-        ConsoleService.WriteToConsole(sessionId, $"(LanguageService) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
         SelectedLanguage = Languages[0];
-
-        ConsoleService.WriteToConsole(sessionId, $"(LanguageService2) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
         await base.OnInitializedAsync();
-        ConsoleService.WriteToConsole(sessionId, $"(LanguageService2) Changed Scheduler: {SynchronizationContext.Current?.ToString()}");
     }
 
     private void ChangeLanguage(ChangeEventArgs e)
