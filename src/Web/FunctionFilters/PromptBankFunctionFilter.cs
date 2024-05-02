@@ -6,9 +6,24 @@ using Microsoft.Toolkit.Diagnostics;
 namespace DslCopilot.Web.FunctionFilters;
 public class PromptBankFunctionFilter(
     ITextEmbeddingGenerator textEmbeddingService,
-    IMemoryDb memory, int exampleCount = 3)
+    IMemoryDb memory)
     : FunctionFilterBase("generateCode")
 {
+    private static async Task<bool> CheckAndCreateIndexAsync(
+        string indexName,
+        int embeddingSize,
+        IMemoryDb memory,
+        CancellationToken token)
+    {
+        var indexes = await memory.GetIndexesAsync(token);
+        var hasIndex = indexes.Contains(indexName);
+        if (!hasIndex)
+        {
+            await memory.CreateIndexAsync(indexName, embeddingSize, token);
+        }
+        return hasIndex;
+    }
+
     protected override async Task OnFunctionInvokedAsync(FunctionInvokedContext context, CancellationToken token)
     {
         var input = context.Arguments["input"]?.ToString();
@@ -18,17 +33,17 @@ public class PromptBankFunctionFilter(
         var result = context.Result.GetValue<string>();
         Guard.IsNotNull(result, nameof(result));
 
-        var similarities = memory.GetSimilarListAsync("prompt-bank", input, cancellationToken: token)
+        const string indexName = "prompt-bank";
+        var embedding = await textEmbeddingService.GenerateEmbeddingAsync(input, token);
+        await CheckAndCreateIndexAsync(indexName, embedding.Length, memory, token);
+        var hasEmbeddings = await memory.GetSimilarListAsync(indexName, input, cancellationToken: token)
             .OrderByDescending(x => x.Item2)
             .Where(x => x.Item2 > 0.5)
             .Select(x => x.Item1)
-            .Take(exampleCount);
-        var hasAny = await similarities.AnyAsync(token);
-        if (!hasAny)
+            .AnyAsync(token);
+        if (!hasEmbeddings)
         {
-            await memory.CreateIndexAsync("prompt-bank", 10, token);
-            var embedding = await textEmbeddingService.GenerateEmbeddingAsync(input, token);
-            await memory.UpsertAsync("prompt-bank", new MemoryRecord
+            await memory.UpsertAsync(indexName, new()
             {
 
                 Id = Guid.NewGuid().ToString(),
