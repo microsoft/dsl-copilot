@@ -32,7 +32,6 @@ public class DslAIService(
         { "fewShotExamples", fewShotExamples },
         { "chatSessionId", chatSessionId },
         { "operationId", operationId },
-        { "language", language }
       }, cancellationToken).ConfigureAwait(false);
 
     return result.GetValue<string>() ?? string.Empty;
