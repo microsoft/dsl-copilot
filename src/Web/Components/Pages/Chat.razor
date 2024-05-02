@@ -73,17 +73,20 @@
 
   private CancellationTokenSource _cts = new();
 
-  private DslDef MyDsl = new DslDef
-    {
-      Name = "MyDsl"
-    };
+  private DslDef MyDsl = new()
+  {
+    Name = "MyDsl"
+  };
 
 
   private async Task OnLanguageChanged(string language)
   {
     selectedLanguage = language;
-    var grammarFile = await LanguageService.GetGrammarForLanguage(selectedLanguage, _cts.Token);
+    var grammarFile = await LanguageService
+      .GetGrammarForLanguage(selectedLanguage, _cts.Token)
+      .ConfigureAwait(false);
     MyDsl.AntlrDef = grammarFile;
+    await InvokeAsync(StateHasChanged).ConfigureAwait(false);
   }
 
   private async Task CheckForEnter(KeyboardEventArgs e)
@@ -110,11 +113,12 @@
 
     // Call DslAIService to send chat message
     SpinnerVisibility = "visible";
-    newMessage.Response = await AIService.AskAI(newMessage.Message, selectedLanguage, MyDsl.AntlrDef, _cts.Token);
+    newMessage.Response = await AIService
+      .AskAI(newMessage.Message, selectedLanguage, MyDsl.AntlrDef, _cts.Token)
+      .ConfigureAwait(false);
 
     SpinnerVisibility = "hidden";
     await InvokeAsync(StateHasChanged);
-
   }
 
   private void OnClick(bool isValidResponse, ChatMessage chatMessage)
