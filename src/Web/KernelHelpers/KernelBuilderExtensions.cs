@@ -59,7 +59,9 @@ public static class KernelBuilderExtensions
         File.ReadAllText("plugins/generateCode.yaml")!,
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
-    kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+    var functionFilters = kernel.FunctionFilters;
+    functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+    functionFilters.Add(kernel.Services.GetRequiredService<PromptBankFunctionFilter>());
     services
       .AddTransient(_ => kernel)
       .AddTransient(_ => kernel.Services.GetRequiredService<IMemoryDb>())
