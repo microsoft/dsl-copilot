@@ -11,7 +11,7 @@ variables:
   azureSubscription: '2ca52967-d562-4d8c-b92e-e4cf46c264cc'
 
   # Function app name
-  functionAppName: 'functions-test-jaspecla'
+  functionAppName: 'functions-test-jaspecla-2'
 
   # Agent VM image name
   vmImageName: 'ubuntu-latest'
