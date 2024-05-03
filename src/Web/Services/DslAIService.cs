@@ -50,7 +50,7 @@ public class DslAIService(
     var languageFilter = MemoryFilters.ByTag("language", language);
 
     var memories = await memory
-      .SearchAsync(input, limit: 3, filter: languageFilter, cancellationToken: cancellationToken)
+      .SearchAsync(query: input, index: "code-index", limit: 3, filter: languageFilter, cancellationToken: cancellationToken)
       .ConfigureAwait(false);
 
     var results = examples.Concat([memories.ToString()]).Where(x => x != null).Cast<string>();
