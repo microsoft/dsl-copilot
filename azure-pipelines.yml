@@ -14,7 +14,7 @@ variables:
   functionAppName: 'functions-test-jaspecla-2'
 
   # Agent VM image name
-  vmImageName: 'ubuntu-latest'
+  vmImageName: 'windows-latest'
 
   # Working Directory
   workingDirectory: 'src/IndexingFunction'
