@@ -9,6 +9,8 @@ namespace DslCopilot.Web.KernelHelpers;
 using Options;
 using Services;
 using FunctionFilters;
+using Microsoft.KernelMemory.AI;
+using Microsoft.KernelMemory.MemoryStorage;
 
 public static class KernelBuilderExtensions
 {
@@ -25,6 +27,8 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
     Guard.IsNotNull(openAiOptions.SearchEndpoint, nameof(openAiOptions.SearchEndpoint));
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
+
+    services.AddSingleton<PromptBankService>();
     
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
@@ -55,9 +59,13 @@ public static class KernelBuilderExtensions
         File.ReadAllText("plugins/generateCode.yaml")!,
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
-    kernel.FunctionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+    var functionFilters = kernel.FunctionFilters;
+    functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+    functionFilters.Add(kernel.Services.GetRequiredService<PromptBankFunctionFilter>());
     services
       .AddTransient(_ => kernel)
+      .AddTransient(_ => kernel.Services.GetRequiredService<IMemoryDb>())
+      .AddTransient(_ => kernel.Services.GetRequiredService<ITextEmbeddingGenerator>())
       .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>());
   }
 }
