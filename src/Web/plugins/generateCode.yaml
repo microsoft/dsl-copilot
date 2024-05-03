@@ -18,12 +18,7 @@ template: |
   {{/if}}
 
   {{#if fewShotExamples}}
-  ## Examples
-
-  Use the following related examples for reference:
-  {{#each fewShotExamples}}
-    {{this}}
-  {{/each}}
+    {{fewShotExamples}}
   {{/if}}
 
   ## Generated Output
