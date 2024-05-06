@@ -53,7 +53,11 @@ public class DslAIService(
       .SearchAsync(query: input, index: "code-index", limit: 3, filter: languageFilter, cancellationToken: cancellationToken)
       .ConfigureAwait(false);
 
-    var results = examples.Concat([memories.ToString()]).Where(x => x != null).Cast<string>();
+    var memoryResults = memories.Results
+      .SelectMany(memory => memory.Partitions)
+      .Select(partition => partition.Text);
+
+    var results = examples.Concat([memoryResults.ToString()]).Where(x => x != null).Cast<string>();
     return string.Join(Environment.NewLine, results);
   }
 }
