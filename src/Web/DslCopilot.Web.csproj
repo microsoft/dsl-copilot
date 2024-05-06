@@ -11,6 +11,7 @@
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.19.1" />
     <PackageReference Include="Azure.Search.Documents" Version="*" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.4.0" />
     <PackageReference Include="Microsoft.Toolkit.Diagnostics" Version="*" />
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
     <PackageReference Include="Microsoft.SemanticKernel" Version="1.7.1" />
@@ -18,10 +19,10 @@
     <PackageReference Include="Microsoft.SemanticKernel.Yaml" Version="1.6.3" />
     <PackageReference Include="Microsoft.SemanticKernel.PromptTemplates.Handlebars" Version="1.6.3" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureAISearch" Version="1.7.1-alpha" />
-    <PackageReference Include="Microsoft.KernelMemory.AI.AzureOpenAI" Version="0.3*" />
-    <PackageReference Include="Microsoft.KernelMemory.MemoryDb.AzureAISearch" Version="0.3*" />
-    <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.3*" />
-    <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.3*" />
+    <PackageReference Include="Microsoft.KernelMemory.AI.AzureOpenAI" Version="0.40.240501.1" />
+    <PackageReference Include="Microsoft.KernelMemory.MemoryDb.AzureAISearch" Version="0.40.240501.1" />
+    <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.40.240501.1" />
+    <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.40.240501.1" />
     <PackageReference Include="Radzen.Blazor" Version="4.30.3" />
   </ItemGroup>
 
