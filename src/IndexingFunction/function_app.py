@@ -2,6 +2,7 @@ import logging
 import os
 import uuid
 import json
+import base64
 
 import azure.functions as func
 from openai import AzureOpenAI
@@ -33,6 +34,12 @@ from llama_index_service import LlamaIndexService
 
 app = func.FunctionApp()
 
+"""
+    A function used to index documentation for a DSL into Azure AI Search.
+    The function will read the blob, extract the content, and store the content
+    in the Azure AI Search index using llama-index's default chunking values. 
+    These values can be updating to fit the specific needs of your documentation.
+"""
 @app.blob_trigger(arg_name="indexBlob", path="dsl-content",
                                connection="function_storage_connection") 
 def blob_trigger(indexBlob: func.InputStream):
@@ -135,10 +142,17 @@ def __move_index_blob(indexBlob: func.InputStream, blob_name: str):
     logging.info(f"Deleting index blob {blob_name} from container {source_container_name}.")
     source_service_client.delete_blob()
 
+"""
+    A function used to index code examples for a DSL into Azure AI Search.
+    The function will read the blob, extract the examples using a specific
+    format you can find in the examples folder of this function into Azure
+    AI Search using an index that matches Semantic Kernels expected memory formatting.
+    Each item in the array creates a document in the index..
+"""
 @app.blob_trigger(arg_name="codeExamples", path="code-content",
                                connection="function_storage_connection") 
 def code_indexing(codeExamples: func.InputStream):
-   
+    blob_name: str = codeExamples.name.split("/")[-1]
     dsl_examples = yaml.safe_load(codeExamples)
     prompts = dsl_examples['prompts']
     language = dsl_examples['language']
@@ -152,7 +166,7 @@ def code_indexing(codeExamples: func.InputStream):
     if index_name not in indexes:
         __create_code_index(index_client, index_name)
 
-    __insert_code_documents(index_client, prompts, language)
+    __insert_code_documents(index_client, prompts, language, blob_name)
 
 def __create_code_index(index_client: SearchIndexClient, indexName: str):
     hnsw_parameters = HnswParameters(metric= "cosine")
@@ -174,8 +188,8 @@ def __create_code_index(index_client: SearchIndexClient, indexName: str):
 
     index_client.create_index(index)
 
-def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts, language: str):
-    search_client = searchIndexClient.get_search_client(os.environ["AISeachCodeIndexName"])
+def __insert_code_documents(search_index_client: SearchIndexClient, prompts, language: str, file_name: str):
+    search_client = search_index_client.get_search_client(os.environ["AISeachCodeIndexName"])
     client = AzureOpenAI(
         azure_endpoint = os.environ["OpenAIEndpoint"], 
         api_key=os.environ["OpenAIAPIKey"],  
@@ -186,16 +200,20 @@ def __insert_code_documents(searchIndexClient: SearchIndexClient, prompts, langu
     for prompt in prompts:
         code_embedding = client.embeddings.create(input=prompt["prompt"], model=os.environ["OpenAIEmbeddingModelName"]).data[0].embedding
         document_id = str(uuid.uuid4())
+        encoded_string = base64.b64encode(document_id.encode('utf-8')).decode('utf-8')
         embedding = code_embedding
+        text = yaml.safe_dump(prompt)
 
         payload = {
-            "prompt": prompt['prompt'],
-            "additionalDetails": prompt['prompt'],
+            "url": "",
+            "schema": "20231218A",
+            "file": file_name,
+            "text": text,
             "response": prompt['response']
         }
         
         DOCUMENT = {
-            "id": document_id,
+            "id": encoded_string,
             "tags": [f"language:{language}"],
             "payload": json.dumps(payload),
             "embedding": embedding,
