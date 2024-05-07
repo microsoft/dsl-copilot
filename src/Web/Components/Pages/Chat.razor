@@ -30,7 +30,10 @@
                           <div class="chat-bubble-footer">
                               <div>
                                   Code Comments:
-                                  <RadzenTextArea class="w-100" aria-label="TextArea" @bind-Value=@msg.CodeComments />
+                                  <RadzenTextArea
+                                    class="w-100"
+                                    aria-label="TextArea"
+                                    @bind-Value=@msg.CodeComments />
                               </div>
                           <div class="footer-icon-block">
                               <div class="footer-icons">
@@ -52,7 +55,11 @@
                                     @bind-Value=@msg.IsInValidResponse />
                               </div>
                               <div class="footer-submit">
-                                  <RadzenButton Variant="Variant.Text" Icon="send" ButtonStyle="ButtonStyle.Primary" />
+                                  <RadzenButton
+                                    Variant="Variant.Text"
+                                    Icon="send"
+                                    ButtonStyle="ButtonStyle.Primary"
+                                    Click=@(args => OnSubmit(msg)) />
                               </div>
                           </div>
                           </div>
@@ -90,6 +97,19 @@
     Name = "MyDsl"
   };
 
+  private async Task OnSubmit(ChatMessage chat)
+  {
+    await promptBank.Upsert("prompt-bank",
+      chat.Message,
+      chat.Response, new()
+      {
+        ["language"] = [ chat.SelectedLanguage ],
+        ["feedback"] = [ chat.CodeComments ],
+      }, _cts.Token);
+
+    chat.CodeComments = string.Empty;
+    await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+  }
 
   private async Task OnLanguageChanged(string language)
   {
