@@ -57,7 +57,7 @@ public class DslAIService(
       .SelectMany(memory => memory.Partitions)
       .Select(partition => partition.Text);
 
-    var results = examples.Concat([memoryResults.ToString()]).Where(x => x != null).Cast<string>();
+    var results = examples.Concat(memoryResults);
     return string.Join(Environment.NewLine, results);
   }
 }
