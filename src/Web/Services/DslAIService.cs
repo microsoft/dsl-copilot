@@ -22,7 +22,7 @@ public class DslAIService(
 
     chatHistory.AddUserMessage(userMessage);
 
-    var fewShotExamples = await GetFewShotExamples(userMessage, cancellationToken).ConfigureAwait(false);
+    var fewShotExamples = await GetFewShotExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
     var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
       {
         { "input", userMessage },
@@ -37,15 +37,27 @@ public class DslAIService(
     return result.GetValue<string>() ?? string.Empty;
   }
 
-  private async Task<string> GetFewShotExamples(string input, CancellationToken cancellationToken)
+  private async Task<string> GetFewShotExamples(string input, string language, CancellationToken cancellationToken)
   {
-    var examples = await File
-      .ReadAllLinesAsync("examples/csharp.md", cancellationToken)
-      .ConfigureAwait(false);
+    IEnumerable<string?> examples = [];
+    if (File.Exists($"examples/{language}.md"))
+    {
+      examples = await File
+        .ReadAllLinesAsync($"examples/{language}.md", cancellationToken)
+        .ConfigureAwait(false);
+    }
+
+    var languageFilter = MemoryFilters.ByTag("language", language);
+
     var memories = await memory
-      .SearchAsync(input, limit: 3, cancellationToken: cancellationToken)
+      .SearchAsync(query: input, index: "code-index", limit: 3, filter: languageFilter, cancellationToken: cancellationToken)
       .ConfigureAwait(false);
-    var results = examples.Concat([memories.ToString()]).Where(x => x != null).Cast<string>();
+
+    var memoryResults = memories.Results
+      .SelectMany(memory => memory.Partitions)
+      .Select(partition => partition.Text);
+
+    var results = examples.Concat([memoryResults.ToString()]).Where(x => x != null).Cast<string>();
     return string.Join(Environment.NewLine, results);
   }
 }
