@@ -9,14 +9,14 @@
 @implements IDisposable;
 
 <div class="chat-container">
-    @foreach (var msg in chatMessages)
+    @foreach (var msg in chatMessages.Reverse())
     {
-              <div class="chat-message-container">
-                  <div class="chat-bubble-input">
-                      <div class="">@msg.Message (@msg.SelectedLanguage)</div>
-                  </div>
-              </div>
-              <ChatResponseContainer Message="@msg" CancellationToken="@_cts.Token" />
+      <ChatResponseContainer Message="@msg" CancellationToken="@_cts.Token" />
+      <div class="chat-message-container">
+          <div class="chat-bubble-input">
+              <div class="">@msg.Message (@msg.SelectedLanguage)</div>
+          </div>
+      </div>
     }
 </div>
 <div class="user-input">

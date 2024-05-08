@@ -4,7 +4,7 @@
 @using Microsoft.KernelMemory.AI;
 @inject PromptBankService promptBank;
 
-<div class="chat-message-container" style="visibility: @(Message.Response is not null && Message.Response != string.Empty ? "visible" : "hidden")">
+<div class="chat-message-container" style="display: @(ShouldDisplay() ? "flex" : "none")">
   <div class="chat-bubble-response">
     <div class="chat-response">
       <pre>@(Message.Response)</pre>
@@ -78,6 +78,11 @@
           ["language"] = [chatMessage.SelectedLanguage],
           ["rating"] = [isValidResponse ? "thumbs-up" : "thumbs-down"]
         }, CancellationToken));
+  }
+
+  private bool ShouldDisplay()
+  {
+    return !string.IsNullOrEmpty(Message.Response);
   }
 
 }
