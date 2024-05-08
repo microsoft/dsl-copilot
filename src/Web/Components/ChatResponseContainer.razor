@@ -1,0 +1,83 @@
+﻿@using DslCopilot.Web.Services;
+@using DslCopilot.Web.Data;
+@using Radzen.Blazor;
+@using Microsoft.KernelMemory.AI;
+@inject PromptBankService promptBank;
+
+<div class="chat-message-container" style="visibility: @(Message.Response is not null && Message.Response != string.Empty ? "visible" : "hidden")">
+  <div class="chat-bubble-response">
+    <div class="chat-response">
+      <pre>@(Message.Response)</pre>
+    </div>
+    <div class="chat-bubble-footer">
+      <div>
+        Code Comments:
+        <RadzenTextArea class="w-100"
+                        aria-label="TextArea"
+                        @bind-Value=@Message.CodeComments />
+      </div>
+      <div class="footer-icon-block">
+        <div class="footer-icons">
+          Code Rating:
+          <RadzenToggleButton Click=@(args => OnClick(true, Message))
+                              Icon="thumb_up"
+                              ButtonStyle="ButtonStyle.Light"
+                              Shade="Shade.Light"
+                              ToggleShade="Shade.Dark"
+                              @bind-Value=@Message.IsValidResponse />
+
+          <RadzenToggleButton Click=@(args => OnClick(false, Message))
+                              Icon="thumb_down"
+                              ButtonStyle="ButtonStyle.Light"
+                              Shade="Shade.Light"
+                              ToggleShade="Shade.Dark"
+                              @bind-Value=@Message.IsInValidResponse />
+        </div>
+        <div class="footer-submit">
+          <RadzenButton Variant="Variant.Text"
+                        Icon="send"
+                        ButtonStyle="ButtonStyle.Primary"
+                        Click=@(args => OnSubmit(Message)) />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@code {
+
+  [Parameter]
+  public ChatMessage Message { get; set; } = new();
+
+  [Parameter]
+  public CancellationToken CancellationToken { get; set; }
+
+  private async Task OnSubmit(ChatMessage chat)
+  {
+    await promptBank.Upsert("prompt-bank",
+      chat.Message,
+      chat.Response, 
+      new()
+        {
+          ["language"] = [chat.SelectedLanguage],
+          ["feedback"] = [chat.CodeComments],
+        }, CancellationToken);
+
+    chat.CodeComments = string.Empty;
+    await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+  }
+
+  private void OnClick(bool isValidResponse, ChatMessage chatMessage)
+  {
+    chatMessage.IsValidResponse = isValidResponse;
+    chatMessage.IsInValidResponse = !isValidResponse!;
+    InvokeAsync(async () => await promptBank.Upsert("prompt-bank",
+      chatMessage.Message,
+      chatMessage.Response, new()
+        {
+          ["language"] = [chatMessage.SelectedLanguage],
+          ["rating"] = [isValidResponse ? "thumbs-up" : "thumbs-down"]
+        }, CancellationToken));
+  }
+
+}

@@ -2,71 +2,22 @@
 @rendermode InteractiveServer
 @using DslCopilot.Web.Services;
 @using DslCopilot.Web.Data;
-@using Microsoft.KernelMemory.AI;
-@using Radzen.Blazor;
 @inject DslAIService AIService;
 @inject LanguageService LanguageService;
 @inject ConsoleService ConsoleService;
 @inject ChatSessionIdService ChatSessionIdService;
-@inject PromptBankService promptBank
 @implements IDisposable;
 
 <div class="chat-container">
-
-    <div class="chat-message-container">
     @foreach (var msg in chatMessages)
     {
-              <div class="chat-messge-container">
+              <div class="chat-message-container">
                   <div class="chat-bubble-input">
                       <div class="">@msg.Message (@msg.SelectedLanguage)</div>
                   </div>
               </div>
-
-               <div class="chat-messge-container" style="visibility: @(msg.Response is not null && msg.Response != string.Empty ? "visible" : "hidden")">
-                  <div class="chat-bubble-response">
-                          <div class="chat-response">
-                              <pre>@(msg.Response)</pre>
-                          </div>
-                          <div class="chat-bubble-footer">
-                              <div>
-                                  Code Comments:
-                                  <RadzenTextArea
-                                    class="w-100"
-                                    aria-label="TextArea"
-                                    @bind-Value=@msg.CodeComments />
-                              </div>
-                          <div class="footer-icon-block">
-                              <div class="footer-icons">
-                                  Code Rating:
-                                  <RadzenToggleButton
-                                      Click=@(args => OnClick(true, msg))
-                                      Icon="thumb_up"
-                                      ButtonStyle="ButtonStyle.Light"
-                                      Shade="Shade.Light"
-                                      ToggleShade="Shade.Dark"
-                                      @bind-Value=@msg.IsValidResponse />
-
-                                  <RadzenToggleButton
-                                    Click=@(args => OnClick(false, msg))
-                                    Icon="thumb_down"
-                                    ButtonStyle="ButtonStyle.Light"
-                                    Shade="Shade.Light"
-                                    ToggleShade="Shade.Dark"
-                                    @bind-Value=@msg.IsInValidResponse />
-                              </div>
-                              <div class="footer-submit">
-                                  <RadzenButton
-                                    Variant="Variant.Text"
-                                    Icon="send"
-                                    ButtonStyle="ButtonStyle.Primary"
-                                    Click=@(args => OnSubmit(msg)) />
-                              </div>
-                          </div>
-                          </div>
-                  </div>
-              </div>
+              <ChatResponseContainer Message="@msg" CancellationToken="@_cts.Token" />
     }
-    </div>
 </div>
 <div class="user-input">
   <div style="visibility: @SpinnerVisibility">
@@ -97,19 +48,6 @@
     Name = "MyDsl"
   };
 
-  private async Task OnSubmit(ChatMessage chat)
-  {
-    await promptBank.Upsert("prompt-bank",
-      chat.Message,
-      chat.Response, new()
-      {
-        ["language"] = [ chat.SelectedLanguage ],
-        ["feedback"] = [ chat.CodeComments ],
-      }, _cts.Token);
-
-    chat.CodeComments = string.Empty;
-    await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-  }
 
   private async Task OnLanguageChanged(string language)
   {
@@ -151,19 +89,6 @@
 
     SpinnerVisibility = "hidden";
     await InvokeAsync(StateHasChanged);
-  }
-
-  private void OnClick(bool isValidResponse, ChatMessage chatMessage)
-  {
-    chatMessage.IsValidResponse = isValidResponse;
-    chatMessage.IsInValidResponse = !isValidResponse!;
-    InvokeAsync(async () => await promptBank.Upsert("prompt-bank",
-      chatMessage.Message,
-      chatMessage.Response, new()
-      {
-        ["language"] = [ chatMessage.SelectedLanguage ],
-        ["rating"] = [ isValidResponse ? "thumbs-up" : "thumbs-down" ]
-      }, _cts.Token));
   }
 
   public void Dispose()

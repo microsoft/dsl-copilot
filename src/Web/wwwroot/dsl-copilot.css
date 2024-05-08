@@ -10,7 +10,7 @@
     overflow-y: scroll;
 }
 
-.chat-messge-container {
+.chat-message-container {
     display: flex;
     margin-bottom: 10px;
 }
