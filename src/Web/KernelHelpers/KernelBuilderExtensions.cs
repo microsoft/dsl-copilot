@@ -56,10 +56,16 @@ public static class KernelBuilderExtensions
           .WithSearchClientConfig(new() { MaxMatchesCount = 3, Temperature = 0.5, TopP = 1 });
       });
 
+    var loggerFactory = LoggerFactory.Create(builder =>
+    {
+      builder.AddConsole();
+      builder.SetMinimumLevel(LogLevel.Debug);
+    });
+
     if (openAiOptions.DebugPrompt == true)
     {
       kernelBuilder.Services
-        .AddLogging()
+        .AddSingleton(loggerFactory)
         .AddSingleton<DebuggingPromptFilter>();
     }
 
