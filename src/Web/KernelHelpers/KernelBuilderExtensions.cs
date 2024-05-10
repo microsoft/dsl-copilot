@@ -13,6 +13,8 @@ using FunctionFilters;
 using Microsoft.KernelMemory.AI;
 using Microsoft.KernelMemory.MemoryStorage;
 using HandlebarsDotNet;
+using System.Net;
+using Polly;
 
 public static class KernelBuilderExtensions
 {
@@ -71,11 +73,13 @@ public static class KernelBuilderExtensions
 
     kernelBuilder.Services.ConfigureHttpClientDefaults(c =>
     {
-      // Use a standard resiliency policy, augmented to retry 5 times
-      c.AddStandardResilienceHandler().Configure(o =>
-      {
-        o.Retry.MaxRetryAttempts = 5;
-        o.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(60);
+      c.AddResilienceHandler("HandleThrottling", static builder => {
+        builder.AddRetry(new HttpRetryStrategyOptions
+        {
+          BackoffType = DelayBackoffType.Exponential,
+          ShouldRetryAfterHeader = true,
+          MaxRetryAttempts = 5
+        });
       });
     });
 
