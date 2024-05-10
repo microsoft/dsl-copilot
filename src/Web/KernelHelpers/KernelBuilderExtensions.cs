@@ -12,6 +12,7 @@ using Services;
 using FunctionFilters;
 using Microsoft.KernelMemory.AI;
 using Microsoft.KernelMemory.MemoryStorage;
+using HandlebarsDotNet;
 
 public static class KernelBuilderExtensions
 {
@@ -30,7 +31,7 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
 
     services.AddSingleton<PromptBankService>();
-    
+
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
@@ -55,6 +56,13 @@ public static class KernelBuilderExtensions
           .WithSearchClientConfig(new() { MaxMatchesCount = 3, Temperature = 0.5, TopP = 1 });
       });
 
+    if (openAiOptions.DebugPrompt == true)
+    {
+      kernelBuilder.Services
+        .AddLogging()
+        .AddSingleton<DebuggingPromptFilter>();
+    }
+
     kernelBuilder.Services.ConfigureHttpClientDefaults(c =>
     {
       // Use a standard resiliency policy, augmented to retry 5 times
@@ -74,10 +82,18 @@ public static class KernelBuilderExtensions
     var functionFilters = kernel.FunctionFilters;
     functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
     functionFilters.Add(kernel.Services.GetRequiredService<PromptBankFunctionFilter>());
+
+    if (openAiOptions.DebugPrompt == true)
+    {
+      var promptFilters = kernel.PromptFilters;
+      promptFilters.Add(kernel.Services.GetRequiredService<DebuggingPromptFilter>());
+    }
+
     services
       .AddTransient(_ => kernel)
       .AddTransient(_ => kernel.Services.GetRequiredService<IMemoryDb>())
       .AddTransient(_ => kernel.Services.GetRequiredService<ITextEmbeddingGenerator>())
       .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>());
+
   }
 }

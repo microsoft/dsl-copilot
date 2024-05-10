@@ -7,4 +7,5 @@ public class AzureOpenAIOptions
   public string? Endpoint { get; set; }
   public string? EmbeddingDeploymentName { get; set; }
   public string? CompletionDeploymentName { get; set; }
+  public bool? DebugPrompt { get; set; }
 }
