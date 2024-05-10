@@ -6,6 +6,7 @@
 @inject LanguageService LanguageService;
 @inject ConsoleService ConsoleService;
 @inject ChatSessionIdService ChatSessionIdService;
+@inject ChatSessionService ChatSessionService;
 @implements IDisposable;
 
 <div class="chat-container">
@@ -29,6 +30,7 @@
     <input type="text" @bind="@message" @onkeyup="CheckForEnter" />
   </div>
   <LanguageSelector OnLanguageChanged="OnLanguageChanged" />
+  <button type="button" class="btn btn-primary" @onclick="ClearChatHistory">Clear Chat History</button>
 </div>
 <Console />
 
@@ -89,6 +91,13 @@
 
     SpinnerVisibility = "hidden";
     await InvokeAsync(StateHasChanged);
+  }
+
+  private void ClearChatHistory()
+  {
+    var chatSessionId = ChatSessionIdService.GetChatSessionId();
+    ChatSessionService.ClearChatSession(chatSessionId);
+    ConsoleService.WriteToConsole(chatSessionId, "Chat history cleared.");
   }
 
   public void Dispose()
