@@ -13,4 +13,14 @@ public class ChatSessionService
     }
     return _chatSessions[sessionId];
   }
+
+  public void ClearChatSession(string sessionId)
+  {
+    if (!_chatSessions.TryGetValue(sessionId, out var _))
+    {
+      return;
+    }
+
+    _chatSessions[sessionId].Clear();
+  }
 }

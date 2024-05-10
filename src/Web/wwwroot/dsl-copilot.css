@@ -51,6 +51,7 @@ body {
     padding: 12px 20px;
     position: relative;
     margin-left: auto;
+    width: 50vw;
 }
 
 .chat-bubble-input:before {
