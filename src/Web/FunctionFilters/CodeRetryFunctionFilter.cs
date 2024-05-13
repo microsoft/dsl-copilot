@@ -55,12 +55,18 @@ public class CodeRetryFunctionFilter(
       if (_numRetries[operationId] < MAX_RETRIES)
       {
         var chatSession = chatSessionService.GetChatSession(chatSessionId);
-        chatSession.AddUserMessage("Unfortunately, this code contains the following errors:");
-        foreach (var error in result.Errors)
-        {
-          chatSession.AddUserMessage(error);
-        }
-        chatSession.AddUserMessage("Please correct the errors and try again.");
+        var originalPrompt = context.Arguments["input"]?.ToString();
+        var errors = string.Join(Environment.NewLine, result.Errors);
+        var newPrompt = string.Join(Environment.NewLine,
+                                    code,
+                                    "Unfortunately, the above code contains the following errors:",
+                                    errors,
+                                    "Please correct the errors and try again.");
+
+        chatSession.AddUserMessage(originalPrompt);
+        chatSession.AddAssistantMessage(code);
+
+        context.Arguments["input"] = newPrompt;
         context.Arguments["history"] = chatSession;
         context.Arguments["errors"] = result.Errors;
         context.Arguments["badCode"] = code;

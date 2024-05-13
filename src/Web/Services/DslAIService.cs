@@ -1,5 +1,8 @@
-﻿using Microsoft.KernelMemory;
+﻿using DslCopilot.Web.Models;
+using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 namespace DslCopilot.Web.Services;
 public class DslAIService(
@@ -12,21 +15,22 @@ public class DslAIService(
   {
     var chatSessionId = chatSessionIdService.GetChatSessionId();
     var chatHistory = chatSessionService.GetChatSession(chatSessionId);
-
     var operationId = Guid.NewGuid().ToString();
 
     if (chatHistory.Count == 0)
     {
       chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given grammar.");
     }
+    
+    var fewShotExamples = await GetLocalExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
+    var indexedExamples = await GetIndexedExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
 
-    chatHistory.AddUserMessage(userMessage);
+    fewShotExamples.AddRange(indexedExamples);
 
-    var fewShotExamples = await GetFewShotExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
     var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
       {
         { "input", userMessage },
-        { "history", string.Join(Environment.NewLine, chatHistory) },
+        { "history", chatHistory.Select(c => new { role = c.Role.Label, content = c.Content }) },
         { "language", language },
         { "grammar", antlrDef },
         { "fewShotExamples", fewShotExamples },
@@ -34,20 +38,44 @@ public class DslAIService(
         { "operationId", operationId },
       }, cancellationToken).ConfigureAwait(false);
 
-    return result.GetValue<string>() ?? string.Empty;
+    var response = result.GetValue<string>() ?? string.Empty;
+    chatHistory.AddUserMessage(userMessage);
+    chatHistory.AddAssistantMessage(response);
+
+    return response;
   }
 
-  private async Task<string> GetFewShotExamples(string input, string language, CancellationToken cancellationToken)
+  private async Task<List<CodeBlock>> GetLocalExamples(string input, string language, CancellationToken cancellationToken)
   {
-    IEnumerable<string?> examples = [];
-    if (File.Exists($"examples/{language}.md"))
+    var fewShotExamples = new List<CodeBlock>();
+
+    if (File.Exists($"examples/{language}.yaml"))
     {
-      examples = await File
-        .ReadAllLinesAsync($"examples/{language}.md", cancellationToken)
+      var examples = await File
+        .ReadAllTextAsync($"examples/{language}.yaml", cancellationToken)
         .ConfigureAwait(false);
+
+      var deserializer = new DeserializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .Build();
+      var codeExamples = deserializer.Deserialize<LanguageExamples>(examples);
+
+      if (codeExamples.Prompts is not null && codeExamples.Prompts.Count > 0)
+      {
+        fewShotExamples.AddRange(codeExamples.Prompts);
+      }
     }
 
+    return fewShotExamples;
+  }
+
+  private async Task<List<CodeBlock>> GetIndexedExamples(string input, string language, CancellationToken cancellationToken)
+  {
+    var indexedExamples = new List<CodeBlock>();
     var languageFilter = MemoryFilters.ByTag("language", language);
+    var deserializer = new DeserializerBuilder()
+        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+        .Build();
 
     var memories = await memory
       .SearchAsync(query: input, index: "code-index", limit: 3, filter: languageFilter, cancellationToken: cancellationToken)
@@ -57,7 +85,12 @@ public class DslAIService(
       .SelectMany(memory => memory.Partitions)
       .Select(partition => partition.Text);
 
-    var results = examples.Concat(memoryResults);
-    return string.Join(Environment.NewLine, results);
+    foreach(string memoryResult in memoryResults)
+    {
+      var codeBlock = deserializer.Deserialize<CodeBlock>(memoryResult);
+      indexedExamples.Add(codeBlock);
+    }
+
+    return indexedExamples;
   }
 }
