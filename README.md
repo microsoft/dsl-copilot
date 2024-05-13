@@ -43,5 +43,29 @@ Code compilation and validation is an area where we can enhance the quality of L
 - TODO - Some DSLs have linting rules that assist with syntax errors, style issues, and programming errors. Linters offer feedback on these issues and help maintain a consistent coding style. In the semantic flow, it would be ideal to incorporate a linting step to ensure that formatting is adhered to when suggesting code samples.
 
 # Feedback loop and documented examples
+- Another important area for adding context involves providing well-documented examples of code, explaining what each piece of code accomplishes, and discussing the underlying reasoning behind the code structure. This approach will help establish context for the Language Model (LLM) as it begins to generate code. Our assumption is that a substantial number of commented examples will be necessary for this process to be effective.  
+To provide these examples to the prompt there are currently two ways in the code base. The first opption is to provide a set of static examples in a yaml file that is located in the example folder under the language name. The second option is to utilize the code indexing function and provide a yaml file in the code indexing container that will be chunked by prompt and added to AI Search. The indexed prompts will be searched and only included if they are a close match to the question asked, but the examples will be included on every prompt. Both currently require a strict type to load data and there is an example below.
+```yaml
+language: "csharp"
+prompts:
+- prompt: "Create a person POCO"
+  additionalDetails: "The greeting method should take a string parameter and write a greeting to the console."
+  response: |
+    class Person
+    {
+        public string Name { get; set; }
+    }
+- prompt: "Create a person with a greeting method"
+  additionalDetails: "The greeting method should take a string parameter and write a greeting to the console."
+  response: |
+    class Person
+    {
+        public string Name { get; set; }
+        public void Greeting(string name)
+        {
+            System.Console.WriteLine("Hello, {0}. I'm {1}! Nice to meet you!", name, Name);
+        }
+    }
+```
+ 
 - TODO - One area where we believe we can enhance context with higher quality is by enabling users to rate responses and storing them in a database. These ratings can then be fed back into the Language Model’s (LLM) context, improving its performance over time.
-- TODO - Another important area would involve providing well-documented examples of code, explaining what each piece of code accomplishes, and discussing the underlying reasoning behind the code structure. This approach will help establish context for the Language Model (LLM) as it begins to reason and generate code. Our assumption is that a substantial number of commented examples will be necessary for this process to be effective.
