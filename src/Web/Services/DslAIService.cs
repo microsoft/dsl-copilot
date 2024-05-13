@@ -16,8 +16,17 @@ public class DslAIService(
     var chatSessionId = chatSessionIdService.GetChatSessionId();
     var chatHistory = chatSessionService.GetChatSession(chatSessionId);
     var operationId = Guid.NewGuid().ToString();
-    var fewShotExamples = await GetFewShotExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
+
+    if (chatHistory.Count == 0)
+    {
+      chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given grammar.");
+    }
+    
+    var fewShotExamples = await GetLocalExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
     var indexedExamples = await GetIndexedExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
+
+    fewShotExamples.AddRange(indexedExamples);
+
     var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
       {
         { "input", userMessage },
@@ -25,7 +34,6 @@ public class DslAIService(
         { "language", language },
         { "grammar", antlrDef },
         { "fewShotExamples", fewShotExamples },
-        { "indexedExamples", indexedExamples },
         { "chatSessionId", chatSessionId },
         { "operationId", operationId },
       }, cancellationToken).ConfigureAwait(false);
@@ -37,7 +45,7 @@ public class DslAIService(
     return response;
   }
 
-  private async Task<List<CodeBlock>> GetFewShotExamples(string input, string language, CancellationToken cancellationToken)
+  private async Task<List<CodeBlock>> GetLocalExamples(string input, string language, CancellationToken cancellationToken)
   {
     var fewShotExamples = new List<CodeBlock>();
 
