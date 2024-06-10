@@ -2,13 +2,13 @@ using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.FunctionFilters;
 public abstract class FunctionFilterBase(string? functionName = null)
-  : IFunctionFilter
+  : IFunctionInvocationFilter
 {
-    CancellationTokenSource _cts = new();
-    private bool FilterFunction(FunctionFilterContext context)
+    private readonly CancellationTokenSource _cts = new();
+    private bool FilterFunction(FunctionInvocationContext context)
         => functionName != null && context.Function.Name != functionName;
 
-    public void OnFunctionInvoked(FunctionInvokedContext context)
+    public void OnFunctionInvoked(FunctionInvocationContext context)
     {
         if (FilterFunction(context))
         {
@@ -19,9 +19,9 @@ public abstract class FunctionFilterBase(string? functionName = null)
             .GetAwaiter()
             .GetResult();;
     }
-    protected virtual Task OnFunctionInvokedAsync(FunctionInvokedContext context, CancellationToken token) => Task.CompletedTask;
+    protected virtual Task OnFunctionInvokedAsync(FunctionInvocationContext context, CancellationToken token) => Task.CompletedTask;
 
-    public void OnFunctionInvoking(FunctionInvokingContext context)
+    public void OnFunctionInvoking(FunctionInvocationContext context)
     {
         if (FilterFunction(context))
         {
@@ -32,5 +32,18 @@ public abstract class FunctionFilterBase(string? functionName = null)
             .GetAwaiter()
             .GetResult();
     }
-  protected virtual Task OnFunctionInvokingAsync(FunctionInvokingContext context, CancellationToken token) => Task.CompletedTask;
+  protected virtual Task OnFunctionInvokingAsync(FunctionInvocationContext context, CancellationToken token) => Task.CompletedTask;
+  public async Task OnFunctionInvocationAsync(FunctionInvocationContext context, Func<FunctionInvocationContext, Task> next)
+  {
+        if (FilterFunction(context))
+        {
+            await next(context).ConfigureAwait(false);
+            return;
+        }
+        await OnFunctionInvokingAsync(context, _cts.Token)
+            .ConfigureAwait(false);
+        await next(context).ConfigureAwait(false);
+        await OnFunctionInvokedAsync(context, _cts.Token)
+            .ConfigureAwait(false);
+  }
 }

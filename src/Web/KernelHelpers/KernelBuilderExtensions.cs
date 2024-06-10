@@ -87,13 +87,13 @@ public static class KernelBuilderExtensions
         File.ReadAllText("plugins/generateCode.yaml")!,
         promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
     ]);
-    var functionFilters = kernel.FunctionFilters;
+    var functionFilters = kernel.FunctionInvocationFilters;
     functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
     functionFilters.Add(kernel.Services.GetRequiredService<PromptBankFunctionFilter>());
 
     if (openAiOptions.DebugPrompt == true)
     {
-      var promptFilters = kernel.PromptFilters;
+      var promptFilters = kernel.PromptRenderFilters;
       promptFilters.Add(kernel.Services.GetRequiredService<DebuggingPromptFilter>());
     }
 

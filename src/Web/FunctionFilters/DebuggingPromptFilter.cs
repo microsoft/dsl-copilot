@@ -1,16 +1,21 @@
-﻿using DslCopilot.Web.Options;
-using DslCopilot.Web.Services;
-using Microsoft.Extensions.Options;
-using Microsoft.SemanticKernel;
+﻿using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Web.FunctionFilters;
 
 public class DebuggingPromptFilter
-  (ILogger<DebuggingPromptFilter> logger) : IPromptFilter
+  (ILogger<DebuggingPromptFilter> logger) : IPromptRenderFilter
 {
-  public void OnPromptRendered(PromptRenderedContext context)
+  public async Task OnPromptRenderAsync(PromptRenderContext context, Func<PromptRenderContext, Task> next)
+  {
+    await OnPromptRendering(context).ConfigureAwait(false);
+    await next(context).ConfigureAwait(false);
+    await OnPromptRendered(context).ConfigureAwait(false);
+  }
+
+  public Task OnPromptRendered(PromptRenderContext context)
   {
     logger.LogDebug($"Prompt rendered: {context.RenderedPrompt}");
+    return Task.CompletedTask;
   }
-  public void OnPromptRendering(PromptRenderingContext context) { }
+  public Task OnPromptRendering(PromptRenderContext context) => Task.CompletedTask;
 }
