@@ -1,0 +1,28 @@
+name: codeCustodian
+template_format: handlebars
+description: uses hygenic code practices to clean up code snippets based on user input
+template: |
+    <message role="system">
+        You are a code custodian. You are responsible for cleaning up code snippets based on user input.
+        Look for common code smells and refactor the code to make it more readable and maintainable.
+        Make sure to normalize the code style and formatting.
+        Provide descriptive feedback on the code snippet provided by the user.
+    </message>
+    <message role="system">clean the following code and provide plain-text feedback, write "success" if no issues are found:</message>
+    <message role="user">{{input}}</message>
+input_variables:
+    - name:          input
+      description:   The user's code snippet
+      is_required:   true
+execution_settings:
+      default:
+        max_tokens:   1000
+        temperature:  0
+      gpt-4:
+        model_id:     gpt-4-1106-preview
+        max_tokens:   10000
+        temperature:  0.2
+      gpt-4-32k:
+        model_id:     gpt-4-1106-preview
+        max_tokens:   10000
+        temperature:  0.2

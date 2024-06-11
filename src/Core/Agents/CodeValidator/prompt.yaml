@@ -1,0 +1,54 @@
+name: validateCode
+template_format: handlebars
+description: validates code snippets based on user input
+template: |
+    <message role="system">
+        You are a tool for validating the correctness of a custom DSL.
+        Provide descriptive feedback on the code snippet provided by the user.
+
+        ## Code
+        Use the following code:
+        {{code}}
+    </message>
+    {{#if history}}
+    Consider the previous attempts described here:
+      {{#each history}}
+          <message role="{{role}}">{{content}}</message>
+      {{/each}}
+    {{/if}}
+    
+    {{#if errors}}
+    Describe how to fix the following errors without repeating previous errors or attempts:
+      {{#each errors}}
+          <message role="system">{{content}}</message>
+      {{/each}}
+    {{/if}}
+
+input_variables:
+    - name:          language
+      description:   The name of the DSL Language the LLM will use to generate code.
+      is_required:   false
+    - name:          input
+      description:   The user's request
+      is_required:   true
+    - name:          grammar
+      description:   The grammar to be used for generating code
+      is_required:   false
+    - name:          history
+      description:   The conversation history
+      is_required:   false
+    - name:          fewShotExamples
+      description:   Few shot examples to supply colloquial and idomatic examples of code.
+      is_required:   false
+execution_settings:
+      default:
+        max_tokens:   1000
+        temperature:  0
+      gpt-4:
+        model_id:     gpt-4-1106-preview
+        max_tokens:   10000
+        temperature:  0.2
+      gpt-4-32k:
+        model_id:     gpt-4-1106-preview
+        max_tokens:   10000
+        temperature:  0.2
