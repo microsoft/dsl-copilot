@@ -24,7 +24,7 @@ public class PromptBankFunctionFilter(
         return hasIndex;
     }
 
-    protected override async Task OnFunctionInvokedAsync(FunctionInvokedContext context, CancellationToken token)
+    protected override async Task OnFunctionInvokedAsync(FunctionInvocationContext context, CancellationToken token)
     {
         var input = context.Arguments["input"]?.ToString();
         Guard.IsNotNull(input, nameof(input));

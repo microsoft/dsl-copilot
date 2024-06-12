@@ -13,7 +13,7 @@ public class CodeRetryFunctionFilter(
 
   private const int MAX_RETRIES = 3;
 
-  protected override async Task OnFunctionInvokedAsync(FunctionInvokedContext context, CancellationToken token)
+  protected override async Task OnFunctionInvokedAsync(FunctionInvocationContext context, CancellationToken token)
   {
     var chatSessionId = context.Arguments["chatSessionId"]?.ToString();
     if (string.IsNullOrEmpty(chatSessionId))
@@ -55,7 +55,7 @@ public class CodeRetryFunctionFilter(
       if (_numRetries[operationId] < MAX_RETRIES)
       {
         var chatSession = chatSessionService.GetChatSession(chatSessionId);
-        var originalPrompt = context.Arguments["input"]?.ToString();
+        var originalPrompt = context.Arguments["input"]?.ToString() ?? "No valid input";
         var errors = string.Join(Environment.NewLine, result.Errors);
         var newPrompt = string.Join(Environment.NewLine,
                                     code,
@@ -75,7 +75,7 @@ public class CodeRetryFunctionFilter(
         var nextResult = await context.Function
           .InvokeAsync(kernel, context.Arguments, token)
           .ConfigureAwait(false);
-        context.SetResultValue(nextResult.GetValue<string>());
+        context.Result = nextResult;
       }
       else
       {
@@ -84,7 +84,7 @@ public class CodeRetryFunctionFilter(
         {
           errorResponse += $"{Environment.NewLine}{error}";
         }
-        context.SetResultValue(errorResponse);
+        context.Result = new FunctionResult(context.Function, errorResponse);
       }
     }
   }
