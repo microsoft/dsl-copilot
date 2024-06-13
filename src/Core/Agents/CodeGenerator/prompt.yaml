@@ -11,5 +11,4 @@ instructions: |
         Don't format the code as markdown or code blocks, just provide the generated output as plain text.
         Think carefully about what the user is asking for and provide the most appropriate code snippet.
     </message>
-execution_settings:
-        model_id:     gpt-4-1106-preview
+

@@ -7,6 +7,9 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace DslCopilot.Core;
 using Agents;
+using DslCopilot.Core.Models;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+
 public class AgentFactory
 {
     private const string
@@ -68,7 +71,6 @@ public class AgentFactory
     }
 
     private TAgent GetAgentFromFile<TAgent>(string path, string name)
-        where TAgent : Agent
     {
         var files = _files[path];
         var fileInfo = files[name];
@@ -84,14 +86,18 @@ public class AgentFactory
 
     private ChatCompletionAgent GetChatCompletionAgentFromFile(string path, string resourceName, string name)
     {
-        var agent = GetAgentFromFile<ChatCompletionAgent>(path, resourceName);
+        var agent = GetAgentFromFile<AgentConfig>(path, resourceName);
         return new ChatCompletionAgent
         {
             Name = name,
             Kernel = _kernel,
             Description = agent.Description,
             Instructions = agent.Instructions,
-            ExecutionSettings = agent.ExecutionSettings,
+            ExecutionSettings = new OpenAIPromptExecutionSettings
+            {
+                ModelId = "gpt-4o",
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+            }
         };
     }
 
