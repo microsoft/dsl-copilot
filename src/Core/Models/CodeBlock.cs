@@ -1,11 +1,6 @@
-﻿namespace DslCopilot.Web.Models
-{
-  public record CodeBlock
-  {
-    public string? Prompt { get; set; }
+﻿namespace DslCopilot.Core.Models;
 
-    public string? AdditionalDetails { get; set; }
-
-    public string? Response { get; set; }
-  }
-}
+public record CodeBlock(
+  string? Prompt,
+  string? AdditionalDetails,
+  string? Response);

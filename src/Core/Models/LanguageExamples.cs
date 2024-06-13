@@ -1,9 +1,5 @@
-﻿namespace DslCopilot.Web.Models
-{
-  public record LanguageExamples
-  {
-    public string? Language { get; set; }
+﻿namespace DslCopilot.Core.Models;
 
-    public List<CodeBlock> Prompts { get; set; } = [];
-  }
-}
+public record LanguageExamples(
+  string? Language,
+  IEnumerable<CodeBlock> Prompts);

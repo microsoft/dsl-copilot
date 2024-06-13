@@ -12,7 +12,6 @@ public class DslAIService(
   public async Task<string> AskAI(
     string userMessage,
     string language,
-    string antlrDef,
     CancellationToken cancellationToken)
   {
     var chatSessionId = chatSessionIdService.GetChatSessionId();
@@ -26,7 +25,6 @@ public class DslAIService(
     var response = await AgentChat(
         userMessage,
         language,
-        antlrDef,
         cancellationToken)
       .ConfigureAwait(false);
     chatHistory.AddUserMessage(userMessage);
@@ -35,8 +33,9 @@ public class DslAIService(
     return response;
   }
 
-  private async Task<string> AgentChat(string message,
-    string language, string antlrDef,
+  private async Task<string> AgentChat(
+    string message,
+    string language,
     CancellationToken cancellationToken)
   {
     var agentFactory = new AgentFactory(kernel);
@@ -55,10 +54,7 @@ public class DslAIService(
       }
     };
     var systemMessage = new ChatMessageContent(AuthorRole.System,
-      @$"I have a language called '{language}' that is defined by the following grammar:
-        {antlrDef}
-        "
-      );
+      $"Generate code for the '{language}' coding language.");
     agentChat.AddChatMessage(systemMessage);
     var chatMessage = new ChatMessageContent(AuthorRole.User, message);
     agentChat.AddChatMessage(chatMessage);
