@@ -42,16 +42,16 @@ public class DslAIService(
     var codeGenAgent = agentFactory.CreateCodeGenerator();
     var agentChat = new AgentGroupChat(
       codeGenAgent//,
-      //agentFactory.CreateCodeValidator(),
-      //agentFactory.CreateCodeCustodian()
+                  //agentFactory.CreateCodeValidator(),
+                  //agentFactory.CreateCodeCustodian()
       )
     {
       ExecutionSettings = new()
       {
         TerminationStrategy =
-          {
-            MaximumIterations = 5
-          }
+        {
+          MaximumIterations = 5,
+        },
       }
     };
     var systemMessage = new ChatMessageContent(AuthorRole.User,
@@ -59,7 +59,7 @@ public class DslAIService(
     agentChat.AddChatMessage(systemMessage);
     var chatMessage = new ChatMessageContent(AuthorRole.User, message);
     agentChat.AddChatMessage(chatMessage);
-    
+
     var messages = agentChat.InvokeAsync(codeGenAgent, cancellationToken);
     var lastMessage = await messages.LastAsync(cancellationToken).ConfigureAwait(false);
     return lastMessage.Content?.ToString() ?? "No response";

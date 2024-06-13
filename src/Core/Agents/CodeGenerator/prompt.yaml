@@ -10,5 +10,3 @@ instructions: |
         Only provide code for your response.
         You're laser focused on the goal at hand.
     </message>
-execution_settings:
-        model_id:     gpt-4o

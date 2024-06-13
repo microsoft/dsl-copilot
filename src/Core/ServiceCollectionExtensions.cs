@@ -29,13 +29,15 @@ public static class ServiceCollectionExtensions
         var blobServiceEndpoint = $"https://{accountName}.blob.core.windows.net";
         BlobServiceClient blobClient = new(new(blobServiceEndpoint), storageSharedKeyCredential);
 
+        var selfAssembly = typeof(ServiceCollectionExtensions).Assembly;
         kernelBuilder.Services
             .AddSingleton(client)
             .AddSingleton(blobClient)
             .AddSingleton<IFileProvider>(new CompositeFileProvider(
             [
                 new PhysicalFileProvider(Directory.GetCurrentDirectory()),
-                new EmbeddedFileProvider(typeof(ServiceCollectionExtensions).Assembly)
+                new ManifestEmbeddedFileProvider(selfAssembly),          
+                new EmbeddedFileProvider(selfAssembly)
             ]))
             .AddSingleton(codeExamplePluginOptions)
             .AddSingleton(grammarRetrievalPluginOptions);
@@ -43,6 +45,7 @@ public static class ServiceCollectionExtensions
             .AddFromType<CodeExampleRetrievalPlugins>()
             .AddFromType<GrammarRetrievalPlugins>();
     }
+
     public static void AddDslCopilotCore(this IServiceCollection services)
         => services.AddSingleton(x => new AgentFactory(x.GetRequiredService<Kernel>()));
 }

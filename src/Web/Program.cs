@@ -2,6 +2,7 @@
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
 using DslCopilot.Web.Components;
+//using workspaces.dsl_copilot.src.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -7,17 +7,21 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace DslCopilot.Core;
 using Agents;
+using DslCopilot.Core.Models;
 using Microsoft.SemanticKernel.Connectors.OpenAI;
 
 public class AgentFactory
 {
-    private static readonly string _namespace = typeof(AgentFactory).Namespace!;
     private const string
         PromptFileName = "prompt.yaml",
         CodeGenPath = "Agents/CodeGenerator",
         CodeValidatorPath = "Agents/CodeValidator",
         CodeCustodianPath = "Agents/CodeCustodian";
 
+    //TODO: Note that "Core" is used in place of "DslCopilot" in the namespace,
+    // because of a bug in Microsoft.Extensions.FileProviders.Embedded.
+    // The package doesn't respect the root namespace specified in MSBuild.
+    // Assembly.GetManifestResourceNames() returns the full namespace, including the root namespace.
     private static string GetFullyQualifiedName(string path, string name)
         => $"Core.{path.Replace('/', '.').Replace('\\', '.')}.{name}";
     private static KeyValuePair<string, IFileInfo> GetDefaultKeyValuePair(
@@ -39,19 +43,6 @@ public class AgentFactory
     {
         var physicalName = Path.Combine(path, name);
         var embeddedName = GetFullyQualifiedName(path, name);
-        var contents = fileProvider.GetDirectoryContents(".");
-        var assembly = typeof(AgentFactory).Assembly;
-        var otherContents = assembly.GetManifestResourceNames();
-        var f = assembly.GetManifestResourceStream(embeddedName);
-        if(f is not null)
-        {
-        using var reader = new StreamReader(f);
-        var file = reader.ReadToEnd();
-        Console.WriteLine($"File: {file}");
-        }
-
-        Console.WriteLine($"Contents: {string.Join(", ", contents.Select(x => x.Name))}");
-        Console.WriteLine($"Other Contents: {string.Join(", ", otherContents)}");
         return GetFileInfo(fileProvider, name)
             ?? GetFileInfo(fileProvider, physicalName)
             ?? GetFileInfo(fileProvider, embeddedName)
@@ -68,7 +59,7 @@ public class AgentFactory
 
     public AgentFactory(Kernel kernel) : this(kernel, typeof(AgentFactory).Assembly) { }
     internal AgentFactory(Kernel kernel, Assembly assembly) : this(kernel, new CompositeFileProvider([
-        //new PhysicalFileProvider(Directory.GetCurrentDirectory()),
+        new PhysicalFileProvider(Directory.GetCurrentDirectory()),
         new ManifestEmbeddedFileProvider(assembly),
         new EmbeddedFileProvider(assembly)
     ])) { }
@@ -80,7 +71,6 @@ public class AgentFactory
     }
 
     private TAgent GetAgentFromFile<TAgent>(string path, string name)
-        where TAgent : Agent
     {
         var files = _files[path];
         var fileInfo = files[name];
@@ -96,14 +86,18 @@ public class AgentFactory
 
     private ChatCompletionAgent GetChatCompletionAgentFromFile(string path, string resourceName, string name)
     {
-        var agent = GetAgentFromFile<ChatCompletionAgent>(path, resourceName);
+        var agent = GetAgentFromFile<AgentConfig>(path, resourceName);
         return new ChatCompletionAgent
         {
             Name = name,
             Kernel = _kernel,
             Description = agent.Description,
             Instructions = agent.Instructions,
-            ExecutionSettings = new OpenAIPromptExecutionSettings() { ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions },
+            ExecutionSettings = new OpenAIPromptExecutionSettings
+            {
+                ModelId = "gpt-4o",
+                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+            }
         };
     }
 
