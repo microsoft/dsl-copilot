@@ -1,18 +1,20 @@
 ﻿using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.AI;
 using Microsoft.KernelMemory.AI.OpenAI;
+using Microsoft.KernelMemory.MemoryStorage;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
 using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
 using Microsoft.Toolkit.Diagnostics;
 using Microsoft.Extensions.Http.Resilience;
+using Polly;
 
 namespace DslCopilot.Web.KernelHelpers;
 using Options;
 using Services;
 using FunctionFilters;
-using Microsoft.KernelMemory.AI;
-using Microsoft.KernelMemory.MemoryStorage;
-using Polly;
+using Core;
+using Core.Plugins;
 
 public static class KernelBuilderExtensions
 {
@@ -81,6 +83,10 @@ public static class KernelBuilderExtensions
       });
     });
 
+    kernelBuilder.AddDslKernelPlugins(
+      new CodeExamplePluginOptions(),
+      new GrammarRetrievalPluginOptions());
+
     var kernel = kernelBuilder.Build();
     kernel.Plugins.AddFromFunctions("yaml_plugins", [
       kernel.CreateFunctionFromPromptYaml(
@@ -102,6 +108,5 @@ public static class KernelBuilderExtensions
       .AddTransient(_ => kernel.Services.GetRequiredService<IMemoryDb>())
       .AddTransient(_ => kernel.Services.GetRequiredService<ITextEmbeddingGenerator>())
       .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>());
-
   }
 }
