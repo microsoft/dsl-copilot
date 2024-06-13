@@ -44,7 +44,12 @@ var aiOptions = builder.Configuration
     .Build()
     .GetSection("AzureOpenAI")
     .Get<AzureOpenAIOptions>()!;
-builder.Services.AddKernelWithCodeGenFilters(consoleService, chatSessionService, aiOptions);
+
+var languageBlobServiceOptions = builder.Configuration
+    .GetSection("LanguageBlobService")
+    .Get<LanguageBlobServiceOptions>()!;
+
+builder.Services.AddKernelWithCodeGenFilters(consoleService, chatSessionService, aiOptions, languageBlobServiceOptions);
 
 var app = builder.Build();
 

@@ -1,4 +1,4 @@
-using System.Reflection;
+﻿using System.Reflection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
@@ -7,6 +7,8 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace DslCopilot.Core;
 using Agents;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
+
 public class AgentFactory
 {
     private static readonly string _namespace = typeof(AgentFactory).Namespace!;
@@ -101,7 +103,7 @@ public class AgentFactory
             Kernel = _kernel,
             Description = agent.Description,
             Instructions = agent.Instructions,
-            ExecutionSettings = agent.ExecutionSettings,
+            ExecutionSettings = new OpenAIPromptExecutionSettings() { ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions },
         };
     }
 

@@ -1,6 +1,14 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Amazon.Util.Internal;
+using Azure.Search.Documents;
+using Azure.Search.Documents.Indexes;
+using Azure.Search.Documents.Models;
+using Azure.Storage.Blobs;
+using Core.Models;
 using DslCopilot.Core.Models;
+using Microsoft.CodeAnalysis;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.KernelMemory;
 using Microsoft.SemanticKernel;
@@ -12,6 +20,8 @@ namespace DslCopilot.Core.Plugins;
 public record CodeExampleRetrievalPluginOptions(
     string ExamplesPath = "examples",
     string CodeIndex = "code-index",
+    string BlobContainerName = "languages",
+    string SemanticConfigurationName = "code-index-config",
     int Limit = 3);
 
 public record GrammarRetrievalPluginOptions(
@@ -29,7 +39,6 @@ public static class IFileExtensions
 }
 
 public class GrammarRetrievalPlugins(
-    IFileProvider fileProvider,
     GrammarRetrievalPluginOptions options)
 {
     [KernelFunction]
@@ -39,62 +48,85 @@ public class GrammarRetrievalPlugins(
         [Description("The language to get the grammar for.")] string language,
         CancellationToken cancellationToken)
     {
-        var languagePath = Path.Combine(options.GrammarPath, $"{language}.g4");
-        var file = fileProvider.GetFileInfo(languagePath);
-        return !file.Exists
-            ? throw new FileNotFoundException(languagePath)
-            : await file.ReadAllAsync(cancellationToken)
-                .ConfigureAwait(false);
+    /*var languagePath = Path.Combine(options.GrammarPath, $"{language}.g4");
+    var file = fileProvider.GetFileInfo(languagePath);
+    return !file.Exists
+        ? throw new FileNotFoundException(languagePath)
+        : await file.ReadAllAsync(cancellationToken)
+            .ConfigureAwait(false);*/
+      return "";
     }
 }
 
 public class CodeExampleRetrievalPlugins(
-    IFileProvider fileProvider,
+    BlobServiceClient blobServiceClient,
+    SearchClient searchClient,
     IKernelMemory memory, 
-    CodeExampleRetrievalPluginOptions options)
-{
+    CodeExampleRetrievalPluginOptions options
+) {
     [KernelFunction]
     [Description("Get local examples for a given language.")]
     [return: Description("A list of code block examples for a given language.")]
-    public async Task<IEnumerable<CodeBlock>> GetLocalExamples(
+    public async Task<string> GetLocalExamples(
         [Description("The language to get examples for.")] string language,
         CancellationToken cancellationToken)
     {
-        var languagePath = Path.Combine(options.ExamplesPath, $"{language}.yaml");
-        var file = fileProvider.GetFileInfo(languagePath);
-        if (!file.Exists) throw new FileNotFoundException(languagePath);
-        var examples = await file
-            .ReadAllAsync(cancellationToken)
+        var resultString = string.Empty;
+        var blobContainerClient = blobServiceClient.GetBlobContainerClient(options.BlobContainerName);
+        var resultSegment = blobContainerClient
+            .GetBlobsByHierarchyAsync(prefix: language + "/", delimiter: "/", cancellationToken: cancellationToken)
+            .AsPages()
             .ConfigureAwait(false);
 
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
-        var codeExamples = deserializer.Deserialize<LanguageExamples>(examples);
-        return codeExamples.Prompts;
+        await foreach (var page in resultSegment)
+        {
+          foreach (var blobItem in page.Values)
+          {
+            // put the blob contents into a string and return it
+            if (!blobItem.IsPrefix && blobItem.Blob.Name.EndsWith(".g4"))
+            {
+              var result = await blobContainerClient
+                .GetBlobClient(blobItem.Blob.Name)
+                .DownloadContentAsync(cancellationToken)
+                .ConfigureAwait(false);
+              resultString += result.Value.Content.ToString();
+            }
+          }
+        }
+    
+        return resultString;
     }
 
     [KernelFunction]
     [Description("Get indexed examples for a given input and language.")]
     [return: Description("A list of code block examples for a given input and language.")]
     public async Task<IEnumerable<CodeBlock>> GetIndexedExamples(
-        [Description("The input to search for.")] string input,
+        [Description("The full user prompt provided by the user.")] string userPrompt,
         [Description("The language to get examples for.")] string language,
-        CancellationToken cancellationToken)
-    {
-        var languageFilter = MemoryFilters.ByTag("language", language);
-        var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .Build();
+        CancellationToken cancellationToken
+    ) {
+        List<CodeBlock> examples = new List<CodeBlock>();
+        SearchResults<CodeExample> response = await searchClient.SearchAsync<CodeExample>(
+            userPrompt,
+            new SearchOptions
+            {
+              Filter = $"tags/any(t: t eq 'language:{language}')",
+              SemanticSearch = new()
+              {
+                SemanticConfigurationName = options.SemanticConfigurationName,
+                QueryCaption = new(QueryCaptionType.Extractive),
+                QueryAnswer = new(QueryAnswerType.Extractive)
+              },
+              QueryType = SearchQueryType.Semantic
+            }
+        );
 
-        var memories = await memory
-          .SearchAsync(query: input, index: options.CodeIndex, limit: options.Limit,
-            filter: languageFilter, cancellationToken: cancellationToken)
-          .ConfigureAwait(false);
+        await foreach (SearchResult<CodeExample> result in response.GetResultsAsync())
+        {
+            var payloadObject = JsonSerializer.Deserialize<Payload>(result.Document.payload, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            examples.Add(new CodeBlock(payloadObject.Response, payloadObject.AdditionalDetails, payloadObject.Prompt));
+        }
 
-        return memories.Results
-          .SelectMany(memory => memory.Partitions)
-          .Select(partition => partition.Text)
-          .Select(deserializer.Deserialize<CodeBlock>);
-    }
+        return examples;
+  }
 }

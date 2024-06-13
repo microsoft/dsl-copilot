@@ -15,6 +15,7 @@ using Services;
 using FunctionFilters;
 using Core;
 using Core.Plugins;
+using Microsoft.Extensions.DependencyInjection;
 
 public static class KernelBuilderExtensions
 {
@@ -22,7 +23,8 @@ public static class KernelBuilderExtensions
     this IServiceCollection services,
     ConsoleService consoleService,
     ChatSessionService chatSessionService,
-    AzureOpenAIOptions? openAiOptions)
+    AzureOpenAIOptions? openAiOptions,
+    LanguageBlobServiceOptions languageBlobServiceOptions)
   {
     ArgumentNullException.ThrowIfNull(openAiOptions);
     Guard.IsNotNull(openAiOptions.EmbeddingDeploymentName, nameof(openAiOptions.EmbeddingDeploymentName));
@@ -84,6 +86,10 @@ public static class KernelBuilderExtensions
     });
 
     kernelBuilder.AddDslKernelPlugins(
+      openAiOptions.SearchEndpoint,
+      openAiOptions.SearchApiKey,
+      languageBlobServiceOptions.AccountName,
+      languageBlobServiceOptions.AccessKey,
       new CodeExampleRetrievalPluginOptions(),
       new GrammarRetrievalPluginOptions());
 
@@ -107,6 +113,8 @@ public static class KernelBuilderExtensions
       .AddTransient(_ => kernel)
       .AddTransient(_ => kernel.Services.GetRequiredService<IMemoryDb>())
       .AddTransient(_ => kernel.Services.GetRequiredService<ITextEmbeddingGenerator>())
-      .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>());
+      .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>())
+      .AddSingleton(_ => kernel.Services.GetRequiredService<GrammarRetrievalPlugins>())
+      .AddSingleton(_ => kernel.Services.GetRequiredService<CodeExampleRetrievalPlugins>());
   }
 }
