@@ -1,4 +1,4 @@
-﻿using DslCopilot.Core.Agents;
+﻿using DslCopilot.Core;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
 using Microsoft.SemanticKernel.ChatCompletion;
@@ -41,9 +41,10 @@ public class DslAIService(
     var agentFactory = new AgentFactory(kernel);
     var codeGenAgent = agentFactory.CreateCodeGenerator();
     var agentChat = new AgentGroupChat(
-      codeGenAgent,
-      agentFactory.CreateCodeValidator(),
-      agentFactory.CreateCodeCustodian())
+      codeGenAgent//,
+      //agentFactory.CreateCodeValidator(),
+      //agentFactory.CreateCodeCustodian()
+      )
     {
       ExecutionSettings = new()
       {
@@ -53,14 +54,14 @@ public class DslAIService(
           }
       }
     };
-    var systemMessage = new ChatMessageContent(AuthorRole.System,
+    var systemMessage = new ChatMessageContent(AuthorRole.User,
       $"Generate code for the '{language}' coding language.");
     agentChat.AddChatMessage(systemMessage);
     var chatMessage = new ChatMessageContent(AuthorRole.User, message);
     agentChat.AddChatMessage(chatMessage);
-
-    var messages = agentChat.GetChatMessagesAsync(codeGenAgent, cancellationToken);
+    
+    var messages = agentChat.InvokeAsync(codeGenAgent, cancellationToken);
     var lastMessage = await messages.LastAsync(cancellationToken).ConfigureAwait(false);
-    return lastMessage.InnerContent?.ToString() ?? "No response";
+    return lastMessage.Content?.ToString() ?? "No response";
   }
 }

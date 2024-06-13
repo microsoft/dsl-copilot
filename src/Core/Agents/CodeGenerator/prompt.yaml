@@ -1,6 +1,6 @@
 name: codeGenerator
 description: generates code snippets based on user input
-template: |
+instructions: |
     <message role="system">
         Based on the code language provided, get the grammar file if its provided.
         Pull from local code examples if available.
@@ -12,14 +12,4 @@ template: |
         Think carefully about what the user is asking for and provide the most appropriate code snippet.
     </message>
 execution_settings:
-      default:
-        max_tokens:   1000
-        temperature:  0
-      gpt-4:
         model_id:     gpt-4-1106-preview
-        max_tokens:   10000
-        temperature:  0.2
-      gpt-4-32k:
-        model_id:     gpt-4-1106-preview
-        max_tokens:   10000
-        temperature:  0.2

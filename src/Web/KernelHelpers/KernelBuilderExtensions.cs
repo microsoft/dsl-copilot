@@ -84,7 +84,7 @@ public static class KernelBuilderExtensions
     });
 
     kernelBuilder.AddDslKernelPlugins(
-      new CodeExamplePluginOptions(),
+      new CodeExampleRetrievalPluginOptions(),
       new GrammarRetrievalPluginOptions());
 
     var kernel = kernelBuilder.Build();

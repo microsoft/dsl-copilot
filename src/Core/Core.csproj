@@ -4,7 +4,6 @@
     <UserSecretsId>31559a6c-60cf-4d2b-8d4e-9c6457d12471</UserSecretsId>
     <SemanticKernelVersion>1.14.1</SemanticKernelVersion>
     <KernelMemoryVersion>0.62.240605.1</KernelMemoryVersion>
-    <DefaultNamespace>DslCopilot.Core</DefaultNamespace>
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
   </PropertyGroup>
 
@@ -13,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.FileProviders.Composite" Version="*" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="*" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="*" />
     <PackageReference Include="Azure.Search.Documents" Version="*" />
