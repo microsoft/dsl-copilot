@@ -31,7 +31,10 @@ namespace DslCopilot.Core.Agents.CodeValidator
         }
     }
 
-    public class CodeValidationRetrievalPlugin(Func<string, Parser> parserProvider)
+    public record CodeValidationRetrievalPluginOptions(
+        IDictionary<string, Parser> Parsers);
+
+    public class CodeValidationRetrievalPlugin(CodeValidationRetrievalPluginOptions options)
     {
         [KernelFunction]
         [Description("Gets validation feedback for the code.")]
@@ -40,7 +43,7 @@ namespace DslCopilot.Core.Agents.CodeValidator
             [Description("The language of the code.")] string language,
             [Description("The code to validate.")] string code)
         {
-            var parser = parserProvider(language);
+            var parser = options.Parsers[language];
             ErrorListener errorListener = new();
             parser.AddErrorListener(errorListener);
             var rootRule = parser.RuleContext.children.First(x => x.Parent == null);

@@ -12,7 +12,7 @@ using Models;
 
 public class AgentFactory
 {
-    private const string
+    internal const string
         PromptFileName = "prompt.yaml",
         CodeGenPath = "Agents/CodeGenerator",
         CodeValidatorPath = "Agents/CodeValidator",
