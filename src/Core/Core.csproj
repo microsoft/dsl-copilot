@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Antlr4.Runtime" Version="*" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Composite" Version="*" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="*" />
     <PackageReference Include="Microsoft.Extensions.FileProviders.Physical" Version="*" />
