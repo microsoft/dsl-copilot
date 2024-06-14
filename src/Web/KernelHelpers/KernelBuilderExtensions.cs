@@ -10,12 +10,11 @@ using Microsoft.Extensions.Http.Resilience;
 using Polly;
 
 namespace DslCopilot.Web.KernelHelpers;
+using Core;
+using Core.Plugins;
 using Options;
 using Services;
 using FunctionFilters;
-using Core;
-using Core.Plugins;
-using Microsoft.Extensions.DependencyInjection;
 
 public static class KernelBuilderExtensions
 {
@@ -33,6 +32,8 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
     Guard.IsNotNull(openAiOptions.SearchEndpoint, nameof(openAiOptions.SearchEndpoint));
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
+    Guard.IsNotNull(languageBlobServiceOptions.AccountName, nameof(languageBlobServiceOptions.AccountName));
+    Guard.IsNotNull(languageBlobServiceOptions.AccessKey, nameof(languageBlobServiceOptions.AccessKey));
 
     services.AddSingleton<PromptBankService>();
 
@@ -75,7 +76,8 @@ public static class KernelBuilderExtensions
 
     kernelBuilder.Services.ConfigureHttpClientDefaults(c =>
     {
-      c.AddResilienceHandler("HandleThrottling", static builder => {
+      c.AddResilienceHandler("HandleThrottling", static builder =>
+      {
         builder.AddRetry(new HttpRetryStrategyOptions
         {
           BackoffType = DelayBackoffType.Exponential,
@@ -85,13 +87,13 @@ public static class KernelBuilderExtensions
       });
     });
 
-    kernelBuilder.AddDslKernelPlugins(
-      openAiOptions.SearchEndpoint,
-      openAiOptions.SearchApiKey,
-      languageBlobServiceOptions.AccountName,
-      languageBlobServiceOptions.AccessKey,
-      new CodeExampleRetrievalPluginOptions(),
-      new GrammarRetrievalPluginOptions());
+    kernelBuilder.AddDslKernelPlugins(new(
+      Endpoint: openAiOptions.SearchEndpoint,
+      Key: openAiOptions.SearchApiKey,
+      Index: "code-index"), new(
+      AccountName: languageBlobServiceOptions.AccountName,
+      AccessKey: languageBlobServiceOptions.AccessKey),
+      new(), new());
 
     var kernel = kernelBuilder.Build();
     kernel.Plugins.AddFromFunctions("yaml_plugins", [

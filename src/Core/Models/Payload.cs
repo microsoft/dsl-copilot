@@ -1,6 +1,6 @@
-﻿namespace Core.Models
+﻿namespace DslCopilot.Core.Models
 {
-  public record Payload (
+  public record Payload(
     string? AdditionalDetails,
     string? Prompt,
     string? Response
