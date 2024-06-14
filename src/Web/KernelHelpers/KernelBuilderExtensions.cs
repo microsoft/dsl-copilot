@@ -36,7 +36,6 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(languageBlobServiceOptions.AccessKey, nameof(languageBlobServiceOptions.AccessKey));
 
     services.AddSingleton<PromptBankService>();
-
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
@@ -95,28 +94,35 @@ public static class KernelBuilderExtensions
       AccessKey: languageBlobServiceOptions.AccessKey),
       new(), new());
 
-    var kernel = kernelBuilder.Build();
-    kernel.Plugins.AddFromFunctions("yaml_plugins", [
-      kernel.CreateFunctionFromPromptYaml(
-        File.ReadAllText("plugins/generateCode.yaml")!,
-        promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
-    ]);
-    var functionFilters = kernel.FunctionInvocationFilters;
-    functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
-    functionFilters.Add(kernel.Services.GetRequiredService<PromptBankFunctionFilter>());
-
-    if (openAiOptions.DebugPrompt == true)
+    services.AddSingleton(kernelBuilder);
+    services.AddTransient(_ =>
     {
-      var promptFilters = kernel.PromptRenderFilters;
-      promptFilters.Add(kernel.Services.GetRequiredService<DebuggingPromptFilter>());
-    }
+      var kernel = kernelBuilder.Build();
+      kernel.Plugins.AddFromFunctions("yaml_plugins", [
+        kernel.CreateFunctionFromPromptYaml(
+          File.ReadAllText("plugins/generateCode.yaml")!,
+          promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
+      ]);
+      T Get<T>() where T : notnull => kernel.Services.GetRequiredService<T>();
+      var functionFilters = kernel.FunctionInvocationFilters;
+      functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+      functionFilters.Add(Get<PromptBankFunctionFilter>());
 
+      if (openAiOptions.DebugPrompt == true)
+      {
+        var promptFilters = kernel.PromptRenderFilters;
+        promptFilters.Add(Get<DebuggingPromptFilter>());
+      }
+      return kernel;
+    });
+
+    T Get<T>(IServiceProvider provider) where T : notnull
+      => provider.GetRequiredService<Kernel>().Services.GetRequiredService<T>();
     services
-      .AddTransient(_ => kernel)
-      .AddTransient(_ => kernel.Services.GetRequiredService<IMemoryDb>())
-      .AddTransient(_ => kernel.Services.GetRequiredService<ITextEmbeddingGenerator>())
-      .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>())
-      .AddSingleton(_ => kernel.Services.GetRequiredService<GrammarRetrievalPlugins>())
-      .AddSingleton(_ => kernel.Services.GetRequiredService<CodeExampleRetrievalPlugins>());
+      .AddTransient(Get<IMemoryDb>)
+      .AddTransient(Get<ITextEmbeddingGenerator>)
+      .AddTransient(Get<IKernelMemory>)
+      .AddSingleton(Get<GrammarRetrievalPlugins>)
+      .AddSingleton(Get<CodeExampleRetrievalPlugins>);
   }
 }

@@ -50,5 +50,5 @@ public static class ServiceCollectionExtensions
     }
 
     public static void AddDslCopilotCore(this IServiceCollection services)
-        => services.AddSingleton(x => new AgentFactory(x.GetRequiredService<Kernel>()));
+        => services.AddSingleton<AgentFactory>();
 }

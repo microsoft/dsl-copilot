@@ -2,13 +2,13 @@
 using Microsoft.Extensions.FileProviders;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
+using Microsoft.SemanticKernel.Connectors.OpenAI;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace DslCopilot.Core;
 using Agents;
-using DslCopilot.Core.Models;
-using Microsoft.SemanticKernel.Connectors.OpenAI;
+using Models;
 
 public class AgentFactory
 {
@@ -55,26 +55,31 @@ public class AgentFactory
     }
 
     private readonly Dictionary<string, Dictionary<string, IFileInfo>> _files;
-    private readonly Kernel _kernel;
+    private readonly IKernelBuilder _kernelBuilder;
 
-    public AgentFactory(Kernel kernel) : this(kernel, typeof(AgentFactory).Assembly) { }
-    internal AgentFactory(Kernel kernel, Assembly assembly) : this(kernel, new CompositeFileProvider([
+    public AgentFactory(IKernelBuilder kernelBuilder)
+        : this(kernelBuilder, typeof(AgentFactory).Assembly) { }
+    internal AgentFactory(IKernelBuilder kernelBuilder, Assembly assembly)
+        : this(kernelBuilder, new CompositeFileProvider([
         new PhysicalFileProvider(Directory.GetCurrentDirectory()),
         new ManifestEmbeddedFileProvider(assembly),
         new EmbeddedFileProvider(assembly)
     ])) { }
-    internal AgentFactory(Kernel kernel, IFileProvider provider) : this(kernel, GetDefaultFiles(provider)) { }
-    internal AgentFactory(Kernel kernel, Dictionary<string, Dictionary<string, IFileInfo>> files)
+    internal AgentFactory(IKernelBuilder kernelBuilder, IFileProvider provider)
+        : this(kernelBuilder, GetDefaultFiles(provider)) { }
+    internal AgentFactory(
+        IKernelBuilder kernelBuilder,
+        Dictionary<string, Dictionary<string, IFileInfo>> files)
     {
         _files = files;
-        _kernel = kernel;
+        _kernelBuilder = kernelBuilder;
     }
 
     private TAgent GetAgentFromFile<TAgent>(string path, string name)
     {
         var files = _files[path];
         var fileInfo = files[name];
-        if(!fileInfo.Exists)
+        if (!fileInfo.Exists)
             throw new FileNotFoundException($"File {name} not found in {path}: {fileInfo.PhysicalPath}");
         using var stream = fileInfo.CreateReadStream();
         using StreamReader reader = new(stream);
@@ -84,27 +89,56 @@ public class AgentFactory
         return deserializer.Deserialize<TAgent>(reader);
     }
 
-    private ChatCompletionAgent GetChatCompletionAgentFromFile(string path, string resourceName, string name)
+    private ChatCompletionAgent GetChatCompletionAgentFromFile(
+        string path,
+        string resourceName,
+        string name,
+        Kernel? kernel,
+        PromptExecutionSettings? executionSettings)
     {
         var agent = GetAgentFromFile<AgentConfig>(path, resourceName);
-        return new ChatCompletionAgent
+        return new()
         {
             Name = name,
-            Kernel = _kernel,
+            Kernel = kernel ?? _kernelBuilder.Build(),
             Description = agent.Description,
             Instructions = agent.Instructions,
-            ExecutionSettings = new OpenAIPromptExecutionSettings
-            {
-                ModelId = "gpt-4o",
-                ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
-            }
+            ExecutionSettings = executionSettings ?? DefaultPromptExecutionSettings,
         };
     }
 
-    public Agent CreateCodeGenerator() =>
-        GetChatCompletionAgentFromFile(CodeGenPath, PromptFileName, "code-generator");
-    public Agent CreateCodeValidator() =>
-        GetChatCompletionAgentFromFile(CodeValidatorPath, PromptFileName, "code-validator");
-    public Agent CreateCodeCustodian() =>
-        GetChatCompletionAgentFromFile(CodeCustodianPath, PromptFileName, "code-custodian");
+    private static readonly PromptExecutionSettings? DefaultPromptExecutionSettings
+        = new OpenAIPromptExecutionSettings
+        {
+            ModelId = "gpt-4o",
+            ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
+        };
+
+    public Agent CreateCodeGenerator(
+        Kernel? kernel = null,
+        PromptExecutionSettings? executionSettings = null) =>
+        GetChatCompletionAgentFromFile(
+            CodeGenPath,
+            PromptFileName,
+            "code-generator",
+            kernel,
+            executionSettings);
+    public Agent CreateCodeValidator(
+        Kernel? kernel = null,
+        PromptExecutionSettings? executionSettings = null) =>
+        GetChatCompletionAgentFromFile(
+            CodeValidatorPath,
+            PromptFileName,
+            "code-validator",
+            kernel,
+            executionSettings);
+    public Agent CreateCodeCustodian(
+        Kernel? kernel = null,
+        PromptExecutionSettings? executionSettings = null) =>
+        GetChatCompletionAgentFromFile(
+            CodeCustodianPath,
+            PromptFileName,
+            "code-custodian",
+            kernel,
+            executionSettings);
 }

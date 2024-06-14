@@ -5,7 +5,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace DslCopilot.Web.Services;
 public class DslAIService(
-  Kernel kernel,
+  IKernelBuilder kernelBuilder,
   ChatSessionIdService chatSessionIdService,
   ChatSessionService chatSessionService)
 {
@@ -38,13 +38,9 @@ public class DslAIService(
     string language,
     CancellationToken cancellationToken)
   {
-    var agentFactory = new AgentFactory(kernel);
+    var agentFactory = new AgentFactory(kernelBuilder);
     var codeGenAgent = agentFactory.CreateCodeGenerator();
-    var agentChat = new AgentGroupChat(
-      codeGenAgent//,
-                  //agentFactory.CreateCodeValidator(),
-                  //agentFactory.CreateCodeCustodian()
-      )
+    var agentChat = new AgentGroupChat(codeGenAgent)
     {
       ExecutionSettings = new()
       {
@@ -54,12 +50,11 @@ public class DslAIService(
         },
       }
     };
-    var systemMessage = new ChatMessageContent(AuthorRole.User,
-      $"Generate code for the '{language}' coding language.");
-    agentChat.AddChatMessage(systemMessage);
-    var chatMessage = new ChatMessageContent(AuthorRole.User, message);
-    agentChat.AddChatMessage(chatMessage);
-
+    // Add a message to the agent chat to set the context.
+    agentChat.AddChatMessage(new(AuthorRole.User,
+      $"Generate code for the '{language}' coding language."));
+    // Add the user message to the agent chat.
+    agentChat.AddChatMessage(new(AuthorRole.User, message));
     var messages = agentChat.InvokeAsync(codeGenAgent, cancellationToken);
     var lastMessage = await messages.LastAsync(cancellationToken).ConfigureAwait(false);
     return lastMessage.Content?.ToString() ?? "No response";
