@@ -5,11 +5,13 @@ using Azure.Storage.Blobs;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
+using System;
+using System.IO;
+using System.Reflection;
 
 namespace DslCopilot.Core;
 
-using System.Reflection;
-using DslCopilot.Core.Agents.CodeValidator;
+using Agents.CodeValidator;
 using Plugins;
 
 public record SearchClientOptions(string Endpoint, string Key, string Index)
@@ -46,7 +48,7 @@ public static class ServiceCollectionExtensions
                 searchClientOptions.Credential))
             .AddSingleton(x => new BlobServiceClient(
                 blobClientOptions.Endpoint,
-                blobClientOptions.Credential))
+                credential: blobClientOptions.Credential))
             .AddSingleton<IFileProvider>(new CompositeFileProvider(
             [
                 new PhysicalFileProvider(Directory.GetCurrentDirectory()),

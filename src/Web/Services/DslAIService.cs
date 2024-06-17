@@ -40,7 +40,8 @@ public class DslAIService(
   {
     var agentFactory = new AgentFactory(kernelBuilder);
     var codeGenAgent = agentFactory.CreateCodeGenerator();
-    var agentChat = new AgentGroupChat(codeGenAgent)
+    var validationAgent = agentFactory.CreateCodeValidator();
+    var agentChat = new AgentGroupChat(codeGenAgent, validationAgent)
     {
       ExecutionSettings = new()
       {

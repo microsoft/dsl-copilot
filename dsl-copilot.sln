@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F202A01B-394
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Web", "src\Web\DslCopilot.Web.csproj", "{A7D59CFE-6056-4557-B704-2E389F82C8B7}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "src\Core\Core.csproj", "{73DA30A4-31C6-4211-96B5-459D3173831E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "src\Core\DslCopilot.Core.csproj", "{73DA30A4-31C6-4211-96B5-459D3173831E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

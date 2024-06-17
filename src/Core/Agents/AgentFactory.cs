@@ -7,6 +7,9 @@ using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace DslCopilot.Core;
+
+using System.Collections.Generic;
+using System.IO;
 using Agents;
 using Models;
 
@@ -35,6 +38,12 @@ public class AgentFactory
             CodeGenPath, [
                 GetDefaultKeyValuePair(PromptFileName,
                     GetFileInfo(fileProvider, CodeGenPath, PromptFileName)),
+            ]
+        },
+        {
+            CodeValidatorPath, [
+                GetDefaultKeyValuePair(PromptFileName,
+                    GetFileInfo(fileProvider, CodeValidatorPath, PromptFileName)),
             ]
         },
     };

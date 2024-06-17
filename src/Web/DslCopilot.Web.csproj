@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Core\DslCopilot.Core.csproj" />
     <PackageReference Include="Azure.Search.Documents" Version="*" />
     <PackageReference Include="Radzen.Blazor" Version="4.30.3" />
   </ItemGroup>
