@@ -14,12 +14,12 @@ using Models;
 public record CodeExampleRetrievalPluginOptions(
     string ExamplesPath = "examples",
     string CodeIndex = "code-index",
-    string BlobContainerName = "languages",
     string SemanticConfigurationName = "code-index-config",
     int Limit = 3);
 
 public record GrammarRetrievalPluginOptions(
-    string GrammarPath = "grammar");
+    string GrammarPath = "grammar",
+    string BlobContainerName = "languages");
 
 public static class IFileExtensions
 {
@@ -33,7 +33,7 @@ public static class IFileExtensions
 }
 
 public class GrammarRetrievalPlugins(
-    IFileProvider fileProvider,
+    BlobServiceClient blobServiceClient,
     GrammarRetrievalPluginOptions options)
 {
     [KernelFunction]
@@ -43,13 +43,29 @@ public class GrammarRetrievalPlugins(
         [Description("The language to get the grammar for.")] string language,
         CancellationToken cancellationToken)
     {
-        var languagePath = Path.Combine(options.GrammarPath, $"{language}.g4");
-        var file = fileProvider.GetFileInfo(languagePath);
-        return !file.Exists
-            ? throw new FileNotFoundException(languagePath)
-            : await file.ReadAllAsync(cancellationToken)
-                .ConfigureAwait(false);
-    }
+        var resultString = string.Empty;
+        var client = blobServiceClient.GetBlobContainerClient(options.BlobContainerName);
+        var blobs = client
+            .GetBlobsByHierarchyAsync(
+                prefix: language + "/",
+                delimiter: "/",
+                cancellationToken: cancellationToken)
+            .AsPages()
+            .SelectMany(page => page.Values.ToAsyncEnumerable())
+            .Where(blobItem => !blobItem.IsPrefix && blobItem.Blob.Name.EndsWith(".g4"));
+
+        await foreach (var blobItem in blobs)
+        {
+          var result = await client
+              .GetBlobClient(blobItem.Blob.Name)
+              .DownloadContentAsync(cancellationToken)
+              .ConfigureAwait(false);
+
+          resultString += result.Value.Content.ToString();
+        }
+
+        return resultString;
+  }
 }
 
 public class CodeExampleRetrievalPlugins(
@@ -60,53 +76,66 @@ public class CodeExampleRetrievalPlugins(
     [KernelFunction]
     [Description("Get local examples for a given language.")]
     [return: Description("A list of code block examples for a given language.")]
-    public async IAsyncEnumerable<string> GetLocalExamples(
+    public async Task<string> GetLocalExamples(
         [Description("The language to get examples for.")] string language,
-        [EnumeratorCancellation] CancellationToken cancellationToken)
+        CancellationToken cancellationToken)
     {
-        var client = blobServiceClient.GetBlobContainerClient(options.BlobContainerName);
-        var blobs = client
-            .GetBlobsByHierarchyAsync(
-                prefix: language + "/",
-                delimiter: "/",
-                cancellationToken: cancellationToken)
-            .AsPages()
-            .SelectMany(page => page.Values.ToAsyncEnumerable())
-            .Where(blobItem => !blobItem.IsPrefix && blobItem.Blob.Name.EndsWith(".g4"));
-        await foreach (var blobItem in blobs)
-        {
-            var result = await client
-                .GetBlobClient(blobItem.Blob.Name)
-                .DownloadContentAsync(cancellationToken)
-                .ConfigureAwait(false);
-            yield return result.Value.Content.ToString();
-        }
+    /*var resultString = string.Empty;
+    var client = blobServiceClient.GetBlobContainerClient(options.BlobContainerName);
+    var blobs = client
+        .GetBlobsByHierarchyAsync(
+            prefix: language + "/",
+            delimiter: "/",
+            cancellationToken: cancellationToken)
+        .AsPages()
+        .SelectMany(page => page.Values.ToAsyncEnumerable())
+        .Where(blobItem => !blobItem.IsPrefix && blobItem.Blob.Name.EndsWith(".g4"));
+
+    await foreach (var blobItem in blobs)
+    {
+        var result = await client
+            .GetBlobClient(blobItem.Blob.Name)
+            .DownloadContentAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        resultString += result.Value.Content.ToString();
+    }
+
+  return resultString;*/
+    return "";
     }
 
     [KernelFunction]
     [Description("Get indexed examples for a given input and language.")]
     [return: Description("A list of code block examples for a given input and language.")]
-    public async Task<IAsyncEnumerable<CodeBlock>> GetIndexedExamples(
+    public async Task<IEnumerable<CodeBlock>> GetIndexedExamples(
         [Description("The full user prompt provided by the user.")] string userPrompt,
         [Description("The language to get examples for.")] string language,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken
+    )
     {
-        var response = await searchClient.SearchAsync<CodeExample>(userPrompt, new SearchOptions
-        {
+      List<CodeBlock> examples = new List<CodeBlock>();
+      SearchResults<CodeExample> response = await searchClient.SearchAsync<CodeExample>(
+          userPrompt,
+          new SearchOptions
+          {
             Filter = $"tags/any(t: t eq 'language:{language}')",
             SemanticSearch = new()
             {
-                SemanticConfigurationName = options.SemanticConfigurationName,
-                QueryCaption = new(QueryCaptionType.Extractive),
-                QueryAnswer = new(QueryAnswerType.Extractive)
+              SemanticConfigurationName = options.SemanticConfigurationName,
+              QueryCaption = new(QueryCaptionType.Extractive),
+              QueryAnswer = new(QueryAnswerType.Extractive)
             },
             QueryType = SearchQueryType.Semantic
-        }, cancellationToken);
+          }
+      );
 
-        JsonSerializerOptions serializerOptions = new() { PropertyNameCaseInsensitive = true };
-        return response.Value.GetResultsAsync()
-            .Select(result => JsonSerializer.Deserialize<Payload>(result.Document.payload, serializerOptions))
-            .Where(payload => payload != null)
-            .Select(payload => new CodeBlock(payload!.Response, payload.AdditionalDetails, payload.Prompt));
-  }
+      await foreach (SearchResult<CodeExample> result in response.GetResultsAsync())
+      {
+        var payloadObject = JsonSerializer.Deserialize<Payload>(result.Document.payload, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        examples.Add(new CodeBlock(payloadObject.Response, payloadObject.AdditionalDetails, payloadObject.Prompt));
+      }
+
+      return examples;
+    }
 }
