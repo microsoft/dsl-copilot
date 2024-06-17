@@ -10,6 +10,8 @@ using Microsoft.SemanticKernel;
 
 namespace DslCopilot.Core.Plugins;
 using Models;
+using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Serialization;
 
 public record CodeExampleRetrievalPluginOptions(
     string ExamplesPath = "examples",
@@ -76,40 +78,37 @@ public class CodeExampleRetrievalPlugins(
     [KernelFunction]
     [Description("Get local examples for a given language.")]
     [return: Description("A list of code block examples for a given language.")]
-    public async Task<string> GetLocalExamples(
+    public async Task<IEnumerable<CodeBlock>> GetLocalExamples(
         [Description("The language to get examples for.")] string language,
         CancellationToken cancellationToken)
     {
-    /*var resultString = string.Empty;
-    var client = blobServiceClient.GetBlobContainerClient(options.BlobContainerName);
-    var blobs = client
-        .GetBlobsByHierarchyAsync(
-            prefix: language + "/",
-            delimiter: "/",
-            cancellationToken: cancellationToken)
-        .AsPages()
-        .SelectMany(page => page.Values.ToAsyncEnumerable())
-        .Where(blobItem => !blobItem.IsPrefix && blobItem.Blob.Name.EndsWith(".g4"));
+      var fewShotExamples = new List<CodeBlock>();
 
-    await foreach (var blobItem in blobs)
-    {
-        var result = await client
-            .GetBlobClient(blobItem.Blob.Name)
-            .DownloadContentAsync(cancellationToken)
-            .ConfigureAwait(false);
+      if (File.Exists($"examples/{language}.yaml"))
+      {
+        var examples = await File
+          .ReadAllTextAsync($"examples/{language}.yaml", cancellationToken)
+          .ConfigureAwait(false);
 
-        resultString += result.Value.Content.ToString();
-    }
+        var deserializer = new DeserializerBuilder()
+          .WithNamingConvention(CamelCaseNamingConvention.Instance)
+          .Build();
+        var codeExamples = deserializer.Deserialize<LanguageExamples>(examples);
 
-  return resultString;*/
-    return "";
-    }
+        if (codeExamples.Prompts is not null && codeExamples.Prompts.Count() > 0)
+        {
+          fewShotExamples.AddRange(codeExamples.Prompts);
+        }
+      }
+
+      return fewShotExamples;
+  }
 
     [KernelFunction]
     [Description("Get indexed examples for a given input and language.")]
     [return: Description("A list of code block examples for a given input and language.")]
     public async Task<IEnumerable<CodeBlock>> GetIndexedExamples(
-        [Description("The full user prompt provided by the user.")] string userPrompt,
+        [Description("The user prompt.")] string userPrompt,
         [Description("The language to get examples for.")] string language,
         CancellationToken cancellationToken
     )
