@@ -31,12 +31,15 @@ public static class ServiceCollectionExtensions
         this IKernelBuilder kernelBuilder,
         SearchClientOptions searchClientOptions,
         BlobClientOptions blobClientOptions,
-        CodeExampleRetrievalPluginOptions codeExamplePluginOptions)
+        CodeExampleRetrievalPluginOptions codeExamplePluginOptions,
+        GrammarRetrievalPluginOptions grammarRetrievalPluginOptions)
     {
         kernelBuilder.Plugins
             .AddFromType<CodeExampleRetrievalPlugins>()
             .AddFromType<GrammarRetrievalPlugins>();
         kernelBuilder.Services
+            .AddSingleton(codeExamplePluginOptions)
+            .AddSingleton(grammarRetrievalPluginOptions)
             .AddSingleton(x => new SearchClient(
                 searchClientOptions.EndpointUri,
                 searchClientOptions.Index,
@@ -57,12 +60,16 @@ public static class ServiceCollectionExtensions
         return kernelBuilder;
     }
 
-    public static IKernelBuilder AddCodeValidationAgent(this IKernelBuilder builder)
+    public static IKernelBuilder AddCodeValidationAgent(
+        this IKernelBuilder builder,
+        CodeValidationRetrievalPluginOptions options)
     {
         builder.Plugins.AddFromType<CodeValidationRetrievalPlugin>();
-        builder.Services.AddKeyedSingleton(AgentFactory.CodeValidatorPath,
-            (provider, key) => provider.GetRequiredService<AgentFactory>()
-            .CreateCodeValidator(builder.Build()));
+        builder.Services
+            .AddSingleton(options)
+            .AddKeyedSingleton(AgentFactory.CodeValidatorPath,
+                (provider, key) => provider.GetRequiredService<AgentFactory>()
+                .CreateCodeValidator(builder.Build()));
         return builder;
     }
 

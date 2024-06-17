@@ -8,6 +8,7 @@ using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
 using Microsoft.Toolkit.Diagnostics;
 using Microsoft.Extensions.Http.Resilience;
 using Polly;
+using Antlr4.Runtime;
 
 namespace DslCopilot.Web.KernelHelpers;
 using Core;
@@ -15,15 +16,34 @@ using Core.Plugins;
 using Options;
 using Services;
 using FunctionFilters;
+using DslCopilot.Core.Agents.CodeValidator;
 
 public static class KernelBuilderExtensions
 {
-  public static void AddKernelWithCodeGenFilters(
+  public static IServiceCollection GenerateAntlrParser<TLexer, TParser>(
+    this IServiceCollection services,
+    string language,
+    Func<AntlrInputStream?, TLexer> lexerFactory,
+    Func<CommonTokenStream?, TParser> parserFactory,
+    Func<TParser, ParserRuleContext> ruleFactory)
+    where TLexer : Lexer
+    where TParser : Parser
+    => services.Configure<CodeValidationRetrievalPluginOptions>(o => o.Parsers[language] = (string input) =>
+    {
+      var charStream = new AntlrInputStream(input);
+      var lexer = lexerFactory(charStream);
+      var tokenStream = new CommonTokenStream(lexer);
+      var parser = parserFactory(tokenStream);
+      return (parser, rule: ruleFactory(parser));
+    });
+
+  public static IServiceCollection AddKernelWithCodeGenFilters(
     this IServiceCollection services,
     ConsoleService consoleService,
     ChatSessionService chatSessionService,
     AzureOpenAIOptions? openAiOptions,
-    LanguageBlobServiceOptions languageBlobServiceOptions)
+    LanguageBlobServiceOptions languageBlobServiceOptions,
+    CodeValidationRetrievalPluginOptions codeValidationRetrievalPluginOptions)
   {
     ArgumentNullException.ThrowIfNull(openAiOptions);
     Guard.IsNotNull(openAiOptions.EmbeddingDeploymentName, nameof(openAiOptions.EmbeddingDeploymentName));
@@ -86,15 +106,14 @@ public static class KernelBuilderExtensions
       });
     });
 
-    kernelBuilder.AddDslKernelPlugins(new(
-      Endpoint: openAiOptions.SearchEndpoint,
-      Key: openAiOptions.SearchApiKey,
-      Index: "code-index"), new(
-      AccountName: languageBlobServiceOptions.AccountName,
-      AccessKey: languageBlobServiceOptions.AccessKey),
-      new(), new());
+    kernelBuilder.AddCodeGenAgent(
+      new(openAiOptions.SearchEndpoint, openAiOptions.SearchApiKey, "code-index"),
+      new(languageBlobServiceOptions.AccountName, languageBlobServiceOptions.AccessKey),
+      new(),
+      new());
+    kernelBuilder.AddCodeValidationAgent(codeValidationRetrievalPluginOptions);
 
-    services.AddSingleton(kernelBuilder);
+    services.AddTransient(_ => kernelBuilder);
     services.AddTransient(_ =>
     {
       var kernel = kernelBuilder.Build();
@@ -118,7 +137,7 @@ public static class KernelBuilderExtensions
 
     T Get<T>(IServiceProvider provider) where T : notnull
       => provider.GetRequiredService<Kernel>().Services.GetRequiredService<T>();
-    services
+    return services
       .AddTransient(Get<IMemoryDb>)
       .AddTransient(Get<ITextEmbeddingGenerator>)
       .AddTransient(Get<IKernelMemory>)

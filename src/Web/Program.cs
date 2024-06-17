@@ -2,6 +2,8 @@
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
 using DslCopilot.Web.Components;
+using DslCopilot.SampleGrammar;
+using DslCopilot.Core.Agents.CodeValidator;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +36,10 @@ builder.Services.AddSingleton(_ =>
 // Chat history should be scoped, since we want one per user session.
 builder.Services.AddScoped<DslAIService>();
 builder.Services.AddScoped<ChatSessionIdService>();
+builder.Services.GenerateAntlrParser("sampleDSL",
+  stream => new SampleDSLLexer(stream),
+  stream => new SampleDSLParser(stream),
+  parser => parser.program());
 
 var aiOptions = builder.Configuration
     .SetBasePath("/")
@@ -49,7 +55,14 @@ var languageBlobServiceOptions = builder.Configuration
     .GetSection("LanguageBlobService")
     .Get<LanguageBlobServiceOptions>()!;
 
-builder.Services.AddKernelWithCodeGenFilters(consoleService, chatSessionService, aiOptions, languageBlobServiceOptions);
+builder.Services.AddKernelWithCodeGenFilters(
+  consoleService,
+  chatSessionService,
+  aiOptions,
+  languageBlobServiceOptions,
+  new CodeValidationRetrievalPluginOptions(
+    CodeValidationRetrievalPlugin.DefaultParsers
+  ));
 
 var app = builder.Build();
 
