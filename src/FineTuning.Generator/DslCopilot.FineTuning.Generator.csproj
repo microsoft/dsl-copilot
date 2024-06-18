@@ -2,15 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
     <UserSecretsId>464d8c65-0c13-416a-ab24-83f68d8810b7</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include=".antlr\ClassroomLexer.cs" />
-    <Compile Include=".antlr\ClassroomParser.cs" />
+    <Compile Include=".antlr\*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -18,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Core\DslCopilot.Core.csproj" />
+    <ProjectReference Include="..\Core\DslCopilot.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

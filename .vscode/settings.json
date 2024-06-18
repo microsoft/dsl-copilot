@@ -8,6 +8,7 @@
     "azureFunctions.projectSubpath": "src/IndexingFunction",
     "antlr4.generation": {
         "mode": "internal",
+        "package": "DslCopilot.Grammars",
         "language": "CSharp",
         "listeners": true,
         "visitors": false
