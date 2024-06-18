@@ -108,7 +108,7 @@ public class CodeExampleRetrievalPlugins(
 
   [KernelFunction]
   [Description("Get indexed examples for a given input and language.")]
-  [return: Description("A list of code block examples for a given input and language.")]
+  [return: Description("A list of code examples for a given input and language.")]
   public async Task<IEnumerable<CodeBlock>> GetIndexedExamples(
       [Description("The user prompt.")] string userPrompt,
       [Description("The language to get examples for.")] string language,
@@ -118,20 +118,21 @@ public class CodeExampleRetrievalPlugins(
     SearchResults<CodeExample> response = await searchClient.SearchAsync<CodeExample>(userPrompt, new SearchOptions
     {
       Filter = $"tags/any(t: t eq 'language:{language}')",
+      Size = 8,
       SemanticSearch = new()
       {
         SemanticConfigurationName = options.SemanticConfigurationName,
         QueryCaption = new(QueryCaptionType.Extractive),
         QueryAnswer = new(QueryAnswerType.Extractive)
       },
-      QueryType = SearchQueryType.Semantic
+      QueryType = SearchQueryType.Semantic,
     }, cancellationToken);
 
     JsonSerializerOptions jsonOptions = new() { PropertyNameCaseInsensitive = true };
     await foreach (var result in response.GetResultsAsync())
     {
       var payloadObject = JsonSerializer.Deserialize<Payload>(result.Document.payload, jsonOptions);
-      examples.Add(new(payloadObject!.Response, payloadObject.AdditionalDetails, payloadObject.Prompt));
+      examples.Add(new(payloadObject!.Prompt, payloadObject.AdditionalDetails, payloadObject.Response));
     }
 
     return examples;
