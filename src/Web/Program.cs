@@ -4,6 +4,8 @@ using DslCopilot.Web.Services;
 using DslCopilot.Web.Components;
 using DslCopilot.SampleGrammar;
 using DslCopilot.Core.Agents.CodeValidator;
+using DslCopilot.ClassroomGrammar;
+using Antlr4.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +43,11 @@ builder.Services.GenerateAntlrParser("sampleDSL",
   stream => new SampleDSLParser(stream),
   parser => parser.program());
 
+builder.Services.GenerateAntlrParser("classroom",
+  stream => new ClassroomLexer(stream),
+  stream => new ClassroomParser(stream),
+  parser => parser.program());
+
 var aiOptions = builder.Configuration
     .SetBasePath("/")
     .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -61,7 +68,24 @@ builder.Services.AddKernelWithCodeGenFilters(
   aiOptions,
   languageBlobServiceOptions,
   new CodeValidationRetrievalPluginOptions(
-    CodeValidationRetrievalPlugin.DefaultParsers
+   //CodeValidationRetrievalPlugin.DefaultParsers
+    new Dictionary<string, Func<string, (Parser parser, ParserRuleContext rule, ErrorListener listener)>>()
+    {
+      { "classroom", input => {
+          var charStream = new AntlrInputStream(input);
+          ClassroomLexer classroomLexer = new (charStream);
+          var tokenStream = new CommonTokenStream(classroomLexer);
+          ClassroomParser classroomParser = new(tokenStream);
+          ErrorListener errorListener = new();
+
+          classroomParser.RemoveErrorListeners();
+          classroomParser.AddErrorListener(errorListener);
+
+          return (parser: classroomParser, rule: classroomParser.program(), listener: errorListener); 
+        } 
+      }
+    }
+
   ));
 
 var app = builder.Build();

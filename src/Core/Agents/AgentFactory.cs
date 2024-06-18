@@ -123,7 +123,7 @@ public class AgentFactory
             ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions,
         };
 
-    public Agent CreateCodeGenerator(
+    public ChatHistoryKernelAgent CreateCodeGenerator(
         Kernel? kernel = null,
         PromptExecutionSettings? executionSettings = null) =>
         GetChatCompletionAgentFromFile(
@@ -132,7 +132,8 @@ public class AgentFactory
             "code-generator",
             kernel,
             executionSettings);
-    public Agent CreateCodeValidator(
+
+    public ChatHistoryKernelAgent CreateCodeValidator(
         Kernel? kernel = null,
         PromptExecutionSettings? executionSettings = null) =>
         GetChatCompletionAgentFromFile(
@@ -141,7 +142,8 @@ public class AgentFactory
             "code-validator",
             kernel,
             executionSettings);
-    public Agent CreateCodeCustodian(
+
+    public ChatHistoryKernelAgent CreateCodeCustodian(
         Kernel? kernel = null,
         PromptExecutionSettings? executionSettings = null) =>
         GetChatCompletionAgentFromFile(
