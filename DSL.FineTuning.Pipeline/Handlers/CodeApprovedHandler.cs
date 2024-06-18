@@ -40,7 +40,6 @@ namespace DSL.FineTuning.Pipeline.Handlers
                 writer.WriteLine(tuningData);
             }
 
-            Console.WriteLine("Line appended successfully.");
             return Unit.Task;
         }
     }
