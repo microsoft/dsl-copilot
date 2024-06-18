@@ -1,11 +1,11 @@
-﻿using DslCopilot.Web.KernelHelpers;
+﻿using Antlr4.Runtime;
+using DslCopilot.SampleGrammar;
+using DslCopilot.Core.Plugins;
+using DslCopilot.ClassroomGrammar;
+using DslCopilot.Web.KernelHelpers;
 using DslCopilot.Web.Options;
 using DslCopilot.Web.Services;
 using DslCopilot.Web.Components;
-using DslCopilot.SampleGrammar;
-using DslCopilot.Core.Agents.CodeValidator;
-using DslCopilot.ClassroomGrammar;
-using Antlr4.Runtime;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -67,21 +67,20 @@ builder.Services.AddKernelWithCodeGenFilters(
   chatSessionService,
   aiOptions,
   languageBlobServiceOptions,
-  new CodeValidationRetrievalPluginOptions(
-   //CodeValidationRetrievalPlugin.DefaultParsers
-    new Dictionary<string, Func<string, (Parser parser, ParserRuleContext rule, ErrorListener listener)>>()
+  new(
+    new Dictionary<string, Func<string, AntlrConfigOptions>>
     {
       { "classroom", input => {
-          var charStream = new AntlrInputStream(input);
-          ClassroomLexer classroomLexer = new (charStream);
-          var tokenStream = new CommonTokenStream(classroomLexer);
+          AntlrInputStream charStream = new(input);
+          ClassroomLexer classroomLexer = new(charStream);
+          CommonTokenStream tokenStream = new(classroomLexer);
           ClassroomParser classroomParser = new(tokenStream);
           ErrorListener errorListener = new();
 
           classroomParser.RemoveErrorListeners();
           classroomParser.AddErrorListener(errorListener);
 
-          return (parser: classroomParser, rule: classroomParser.program(), listener: errorListener); 
+          return new(parser: classroomParser, rule: classroomParser.program(), listener: errorListener); 
         } 
       }
     }

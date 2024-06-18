@@ -1,7 +1,6 @@
 ﻿using DslCopilot.Core;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
-using Microsoft.SemanticKernel.Agents.Chat;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace DslCopilot.Web.Services;

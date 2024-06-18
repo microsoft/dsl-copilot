@@ -1,5 +1,4 @@
 ﻿using DslCopilot.Core;
-using DslCopilot.Core.Agents.CodeValidator;
 using DslCopilot.Core.Plugins;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -28,9 +27,9 @@ namespace DSL.FineTuning.Pipeline.Extensions
           where TParser : Parser
           => services.Configure<CodeValidationRetrievalPluginOptions>(o => o.Parsers[language] = (string input) =>
           {
-              var charStream = new AntlrInputStream(input);
+              AntlrInputStream charStream = new(input);
               var lexer = lexerFactory(charStream);
-              var tokenStream = new CommonTokenStream(lexer);
+              CommonTokenStream tokenStream = new(lexer);
               var parser = parserFactory(tokenStream);
 
               ErrorListener errorListener = new();
@@ -38,7 +37,7 @@ namespace DSL.FineTuning.Pipeline.Extensions
               parser.RemoveErrorListeners();
               parser.AddErrorListener(errorListener);
 
-              return (parser, rule: ruleFactory(parser), errorListener);
+              return new(parser, rule: ruleFactory(parser), errorListener);
           });
 
         public static IServiceCollection AddKernelWithCodeGenFilters(
@@ -66,7 +65,7 @@ namespace DSL.FineTuning.Pipeline.Extensions
               .AddAzureAISearchAsMemoryDb(searchConfig)
               .AddKernelMemory(memoryBuilder =>
               {
-                  var tokenizer = new DefaultGPTTokenizer();
+                  DefaultGPTTokenizer tokenizer = new();
 
                   memoryBuilder.WithAzureOpenAITextGeneration(completionAzureOpenAIConfig, tokenizer)
                     .WithAzureOpenAITextEmbeddingGeneration(embeddingAzureOpenAIConfig, tokenizer)

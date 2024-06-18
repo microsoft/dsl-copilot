@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace DslCopilot.Core.Agents;
 
 public static class DictionaryExtensions

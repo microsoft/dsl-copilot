@@ -16,7 +16,6 @@ using Core.Plugins;
 using Options;
 using Services;
 using FunctionFilters;
-using DslCopilot.Core.Agents.CodeValidator;
 
 public static class KernelBuilderExtensions
 {
@@ -40,7 +39,7 @@ public static class KernelBuilderExtensions
         parser.RemoveErrorListeners();
         parser.AddErrorListener(errorListener);
 
-        return (parser, rule: ruleFactory(parser), errorListener);
+        return new(parser, rule: ruleFactory(parser), errorListener);
     });
 
   public static IServiceCollection AddKernelWithCodeGenFilters(
