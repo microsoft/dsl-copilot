@@ -5,13 +5,9 @@ using Azure.Storage.Blobs;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.SemanticKernel;
-using System;
-using System.IO;
 using System.Reflection;
 
 namespace DslCopilot.Core;
-
-using Agents.CodeValidator;
 using Plugins;
 
 public record SearchClientOptions(string Endpoint, string Key, string Index)

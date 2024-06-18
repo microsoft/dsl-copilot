@@ -3,7 +3,7 @@ using Antlr4.Runtime;
 using DSL.FineTuning.Pipeline;
 using DSL.FineTuning.Pipeline.Services;
 using DSL.FineTuning.Pipeline.Extensions;
-using DslCopilot.Core.Agents.CodeValidator;
+using DslCopilot.Core.Plugins;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.SemanticKernel;
@@ -14,31 +14,34 @@ using MediatR;
 using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
 using DSL.FineTuning.Pipeline.Models;
-using Microsoft.SemanticKernel.Agents;
+using Microsoft.Toolkit.Diagnostics;
 
 CancellationTokenSource cancellationToken = new();
-ApplicationSettings applicationSettings = GetApplicationSettings();
-IKernelBuilder kernelBuilder = CreateKernelKernelBuilder(
-    applicationSettings.OpenAI.ModelName, 
-    applicationSettings.OpenAI.Endpoint, 
+var applicationSettings = GetApplicationSettings();
+var kernelBuilder = CreateKernelKernelBuilder(
+    applicationSettings.OpenAI.ModelName,
+    applicationSettings.OpenAI.Endpoint,
     applicationSettings.OpenAI.Key
 );
 
-IHost host = BuildKernel(args, kernelBuilder, applicationSettings);
+var host = BuildKernel(args, kernelBuilder, applicationSettings);
 OpenAIChatService chatService = new(kernelBuilder);
 
-IMediator mediatr = host.Services.GetRequiredService<IMediator>();
-List<string> prompts = GetCodeGenerationPrompts(applicationSettings.GlobalSettings.PromptFileLocation);
+var mediatr = host.Services.GetRequiredService<IMediator>();
+var prompts = GetCodeGenerationPrompts(applicationSettings.GlobalSettings.PromptFileLocation);
 
 foreach (var prompt in prompts)
 {
-    (ChatMessageContent chatMessageContent, ChatHistoryKernelAgent primaryAgent) = await chatService.AgentChat(
+    (var chatMessageContent, var primaryAgent) = await chatService.AgentChat(
         prompt,
         applicationSettings.GlobalSettings.LanguageName,
         cancellationToken.Token
     ).ConfigureAwait(false);
 
-    var promptGeneratedCode = new PromptGeneratedCode(
+    Guard.IsNotNullOrWhiteSpace(primaryAgent.Instructions, nameof(primaryAgent.Instructions));
+    Guard.IsNotNullOrWhiteSpace(chatMessageContent.AuthorName, nameof(chatMessageContent.AuthorName));
+    Guard.IsNotNullOrWhiteSpace(chatMessageContent.Content, nameof(chatMessageContent.Content));
+    PromptGeneratedCode promptGeneratedCode = new(
         primaryAgent.Instructions,
         chatMessageContent.AuthorName,
         chatMessageContent.Role.ToString(),
@@ -51,40 +54,36 @@ foreach (var prompt in prompts)
 
 static ApplicationSettings GetApplicationSettings()
 {
-    IConfigurationRoot config = new ConfigurationBuilder()
+    var config = new ConfigurationBuilder()
         .AddJsonFile("appsettings.json")
         .AddUserSecrets(Assembly.GetExecutingAssembly())
         .Build();
 
-    return config.GetSection("ApplicationSettings").Get<ApplicationSettings>();
+    return config.GetSection("ApplicationSettings").Get<ApplicationSettings>()
+        ?? throw new InvalidOperationException("ApplicationSettings not found in appsettings.json");
 }
 
 static IKernelBuilder CreateKernelKernelBuilder(
     string modelName,
     string endpoint,
-    string key
-) {
-    var builder = Kernel.CreateBuilder();
-
-    builder.AddAzureOpenAIChatCompletion(
+    string key)
+    => Kernel.CreateBuilder()
+    .AddAzureOpenAIChatCompletion(
         modelName,
         endpoint,
         key);
 
-    return builder;
-}
-
 static IHost BuildKernel(string[] args, IKernelBuilder kernelBuilder, ApplicationSettings applicationSettings)
 {
-    HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
-    var searchConfig = new AzureAISearchConfig
+    var builder = Host.CreateApplicationBuilder(args);
+    AzureAISearchConfig searchConfig = new()
     {
         APIKey = applicationSettings.AzureAISearch.Key,
         Endpoint = applicationSettings.AzureAISearch.Endpoint,
         Auth = AzureAISearchConfig.AuthTypes.APIKey
     };
 
-    var embeddingAzureOpenAIConfig = new AzureOpenAIConfig
+    AzureOpenAIConfig embeddingAzureOpenAIConfig = new()
     {
         APIKey = applicationSettings.OpenAI.Key,
         APIType = AzureOpenAIConfig.APITypes.TextCompletion,
@@ -93,7 +92,7 @@ static IHost BuildKernel(string[] args, IKernelBuilder kernelBuilder, Applicatio
         Deployment = applicationSettings.OpenAI.ModelName
     };
 
-    var completionAzureOpenAIConfig = new AzureOpenAIConfig
+    AzureOpenAIConfig completionAzureOpenAIConfig = new()
     {
         APIKey = applicationSettings.OpenAI.Key,
         APIType = AzureOpenAIConfig.APITypes.EmbeddingGeneration,
@@ -102,32 +101,34 @@ static IHost BuildKernel(string[] args, IKernelBuilder kernelBuilder, Applicatio
         Deployment = applicationSettings.OpenAI.ModelName
     };
 
-    var codeValidationRetrievalPluginOptions = new CodeValidationRetrievalPluginOptions(
-        new Dictionary<string, Func<string, (Parser parser, ParserRuleContext rule, ErrorListener listener)>>()
+    CodeValidationRetrievalPluginOptions codeValidationRetrievalPluginOptions = new(
+        new Dictionary<string, Func<string, AntlrConfigOptions>>
         {
-            { 
-                applicationSettings.GlobalSettings.LanguageName.ToLower(), 
-                input => {
-                    var charStream = new AntlrInputStream(input);
-                    ClassroomLexer classroomLexer = new (charStream);
-                    var tokenStream = new CommonTokenStream(classroomLexer);
+            {
+                applicationSettings.GlobalSettings.LanguageName.ToLower(),
+                input =>
+                {
+                    AntlrInputStream charStream = new(input);
+                    ClassroomLexer classroomLexer = new(charStream);
+                    CommonTokenStream tokenStream = new(classroomLexer);
                     ClassroomParser classroomParser = new(tokenStream);
                     ErrorListener errorListener = new();
 
                     classroomParser.RemoveErrorListeners();
                     classroomParser.AddErrorListener(errorListener);
 
-                    return (parser: classroomParser, rule: classroomParser.program(), listener: errorListener);
+                    return new(parser: classroomParser, rule: classroomParser.program(), listener: errorListener);
                 }
             }
         }
     );
 
     builder.Services.AddSingleton(applicationSettings.GlobalSettings);
-    builder.Services.GenerateAntlrParser(applicationSettings.GlobalSettings.LanguageName.ToLower(),
-      stream => new ClassroomLexer(stream),
-      stream => new ClassroomParser(stream),
-      parser => parser.program());
+    builder.Services.GenerateAntlrParser(
+        applicationSettings.GlobalSettings.LanguageName.ToLower(),
+        stream => new ClassroomLexer(stream),
+        stream => new ClassroomParser(stream),
+        parser => parser.program());
 
     builder.Services.AddKernelWithCodeGenFilters(
         kernelBuilder,
@@ -148,12 +149,12 @@ static IHost BuildKernel(string[] args, IKernelBuilder kernelBuilder, Applicatio
     return builder.Build();
 }
 
-static List<string> GetCodeGenerationPrompts(string promptFileLocation)
+static string[] GetCodeGenerationPrompts(string promptFileLocation)
 {
-    string examples = File.ReadAllText(promptFileLocation);
+    var examples = File.ReadAllText(promptFileLocation);
     var deserializer = new DeserializerBuilder()
           .WithNamingConvention(CamelCaseNamingConvention.Instance)
           .Build();
 
-    return deserializer.Deserialize<List<string>>(examples);
+    return deserializer.Deserialize<string[]>(examples);
 }
