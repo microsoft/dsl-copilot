@@ -30,11 +30,17 @@ public static class KernelBuilderExtensions
     where TParser : Parser
     => services.Configure<CodeValidationRetrievalPluginOptions>(o => o.Parsers[language] = (string input) =>
     {
-      var charStream = new AntlrInputStream(input);
-      var lexer = lexerFactory(charStream);
-      var tokenStream = new CommonTokenStream(lexer);
-      var parser = parserFactory(tokenStream);
-      return (parser, rule: ruleFactory(parser));
+        var charStream = new AntlrInputStream(input);
+        var lexer = lexerFactory(charStream);
+        var tokenStream = new CommonTokenStream(lexer);
+        var parser = parserFactory(tokenStream);
+
+        ErrorListener errorListener = new();
+
+        parser.RemoveErrorListeners();
+        parser.AddErrorListener(errorListener);
+
+        return (parser, rule: ruleFactory(parser), errorListener);
     });
 
   public static IServiceCollection AddKernelWithCodeGenFilters(

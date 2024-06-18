@@ -7,8 +7,8 @@ instructions: |
     Consider the previous attempts described by the conversation history
     and provide feedback to ensure previous mistakes aren't reimplemented.
 
-    If one is provided for the language, use a code_validator tool to check the code snippets for correctness.
+    Use the {{CodeValidationRetrievalPlugin.code_validator}} plugin to check the code snippets for correctness.
 
     If the code is incorrect, provide feedback on the error from the tools and suggest a correction.
-    If the code is correct, just respond with a success message that contains the string literal "::sucesss::".
+    If the code is correct, just respond with a success message that contains the string literal "::success::".
   </message>

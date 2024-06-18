@@ -1,6 +1,7 @@
 ﻿using DslCopilot.Core;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Agents;
+using Microsoft.SemanticKernel.Agents.Chat;
 using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace DslCopilot.Web.Services;
@@ -45,10 +46,11 @@ public class DslAIService(
     {
       ExecutionSettings = new()
       {
-        TerminationStrategy =
+        TerminationStrategy = new ApprovalTerminationStrategy()
         {
-          MaximumIterations = 5,
-        },
+          Agents = [validationAgent],
+          MaximumIterations = 6,
+        }
       }
     };
     // Add a message to the agent chat to set the context.
@@ -56,8 +58,8 @@ public class DslAIService(
       $"Generate code for the '{language}' coding language."));
     // Add the user message to the agent chat.
     agentChat.AddChatMessage(new(AuthorRole.User, message));
-    var messages = agentChat.InvokeAsync(codeGenAgent, cancellationToken);
-    var lastMessage = await messages.LastAsync(cancellationToken).ConfigureAwait(false);
+    var messages = await agentChat.InvokeAsync(cancellationToken).ToListAsync();
+    var lastMessage = messages.Last(c => c.AuthorName == codeGenAgent.Name);
     return lastMessage.Content?.ToString() ?? "No response";
   }
 }
