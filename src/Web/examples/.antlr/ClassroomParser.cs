@@ -39,26 +39,36 @@ namespace DslCopilot.ClassroomGrammar
         public const int
             T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, T__7 = 8, T__8 = 9,
             T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, T__14 = 15, T__15 = 16, T__16 = 17,
-            T__17 = 18, T__18 = 19, T__19 = 20, Value = 21, Note = 22, COMMENT = 23, MULTILINE_COMMENT = 24,
-            ID = 25, WS = 26;
+            T__17 = 18, T__18 = 19, T__19 = 20, T__20 = 21, T__21 = 22, T__22 = 23, T__23 = 24,
+            T__24 = 25, T__25 = 26, T__26 = 27, T__27 = 28, T__28 = 29, T__29 = 30, T__30 = 31,
+            T__31 = 32, T__32 = 33, T__33 = 34, Value = 35, Note = 36, BOOLEAN = 37, COMMENT = 38,
+            MULTILINE_COMMENT = 39, ID = 40, WS = 41;
         public const int
             RULE_program = 0, RULE_actionMainMethod = 1, RULE_block = 2, RULE_statement = 3,
             RULE_notesPrintStatement = 4, RULE_variableDeclaration = 5, RULE_dataType = 6,
-            RULE_expression = 7;
+            RULE_ifStatement = 7, RULE_whileLoop = 8, RULE_forLoop = 9, RULE_functionDeclaration = 10,
+            RULE_parameterList = 11, RULE_parameter = 12, RULE_functionCall = 13,
+            RULE_argumentList = 14, RULE_booleanExpression = 15, RULE_relationalOperator = 16,
+            RULE_expression = 17;
         public static readonly string[] ruleNames = {
         "program", "actionMainMethod", "block", "statement", "notesPrintStatement",
-        "variableDeclaration", "dataType", "expression"
+        "variableDeclaration", "dataType", "ifStatement", "whileLoop", "forLoop",
+        "functionDeclaration", "parameterList", "parameter", "functionCall", "argumentList",
+        "booleanExpression", "relationalOperator", "expression"
     };
 
         private static readonly string[] _LiteralNames = {
         null, "'Classroom'", "'<'", "'>'", "'Action'", "'main'", "'('", "')'",
         "'{'", "'}'", "'Notes'", "'.'", "'take'", "';'", "'='", "'value'", "'note'",
-        "'*'", "'/'", "'+'", "'-'"
+        "'boolean'", "'if'", "'else'", "'while'", "'for'", "'function'", "','",
+        "'!'", "'&&'", "'||'", "'=='", "'!='", "'<='", "'>='", "'*'", "'/'", "'+'",
+        "'-'"
     };
         private static readonly string[] _SymbolicNames = {
         null, null, null, null, null, null, null, null, null, null, null, null,
-        null, null, null, null, null, null, null, null, null, "Value", "Note",
-        "COMMENT", "MULTILINE_COMMENT", "ID", "WS"
+        null, null, null, null, null, null, null, null, null, null, null, null,
+        null, null, null, null, null, null, null, null, null, null, null, "Value",
+        "Note", "BOOLEAN", "COMMENT", "MULTILINE_COMMENT", "ID", "WS"
     };
         public static readonly IVocabulary DefaultVocabulary = new Vocabulary(_LiteralNames, _SymbolicNames);
 
@@ -117,13 +127,13 @@ namespace DslCopilot.ClassroomGrammar
             {
                 EnterOuterAlt(_localctx, 1);
                 {
-                    State = 16;
+                    State = 36;
                     Match(T__0);
-                    State = 17;
+                    State = 37;
                     Match(T__1);
-                    State = 18;
+                    State = 38;
                     actionMainMethod();
-                    State = 19;
+                    State = 39;
                     Match(T__2);
                 }
             }
@@ -163,15 +173,15 @@ namespace DslCopilot.ClassroomGrammar
             {
                 EnterOuterAlt(_localctx, 1);
                 {
-                    State = 21;
+                    State = 41;
                     Match(T__3);
-                    State = 22;
+                    State = 42;
                     Match(T__4);
-                    State = 23;
+                    State = 43;
                     Match(T__5);
-                    State = 24;
+                    State = 44;
                     Match(T__6);
-                    State = 25;
+                    State = 45;
                     block();
                 }
             }
@@ -217,24 +227,24 @@ namespace DslCopilot.ClassroomGrammar
             {
                 EnterOuterAlt(_localctx, 1);
                 {
-                    State = 27;
+                    State = 47;
                     Match(T__7);
-                    State = 31;
+                    State = 51;
                     ErrorHandler.Sync(this);
                     _la = TokenStream.LA(1);
-                    while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 99328L) != 0))
+                    while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1099519460352L) != 0))
                     {
                         {
                             {
-                                State = 28;
+                                State = 48;
                                 statement();
                             }
                         }
-                        State = 33;
+                        State = 53;
                         ErrorHandler.Sync(this);
                         _la = TokenStream.LA(1);
                     }
-                    State = 34;
+                    State = 54;
                     Match(T__8);
                 }
             }
@@ -263,6 +273,31 @@ namespace DslCopilot.ClassroomGrammar
             {
                 return GetRuleContext<VariableDeclarationContext>(0);
             }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public IfStatementContext ifStatement()
+            {
+                return GetRuleContext<IfStatementContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public WhileLoopContext whileLoop()
+            {
+                return GetRuleContext<WhileLoopContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ForLoopContext forLoop()
+            {
+                return GetRuleContext<ForLoopContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public FunctionDeclarationContext functionDeclaration()
+            {
+                return GetRuleContext<FunctionDeclarationContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public FunctionCallContext functionCall()
+            {
+                return GetRuleContext<FunctionCallContext>(0);
+            }
             public StatementContext(ParserRuleContext parent, int invokingState)
                 : base(parent, invokingState)
             {
@@ -277,23 +312,59 @@ namespace DslCopilot.ClassroomGrammar
             EnterRule(_localctx, 6, RULE_statement);
             try
             {
-                State = 38;
+                State = 63;
                 ErrorHandler.Sync(this);
                 switch (TokenStream.LA(1))
                 {
                     case T__9:
                         EnterOuterAlt(_localctx, 1);
                         {
-                            State = 36;
+                            State = 56;
                             notesPrintStatement();
                         }
                         break;
                     case T__14:
                     case T__15:
+                    case T__16:
                         EnterOuterAlt(_localctx, 2);
                         {
-                            State = 37;
+                            State = 57;
                             variableDeclaration();
+                        }
+                        break;
+                    case T__17:
+                        EnterOuterAlt(_localctx, 3);
+                        {
+                            State = 58;
+                            ifStatement();
+                        }
+                        break;
+                    case T__19:
+                        EnterOuterAlt(_localctx, 4);
+                        {
+                            State = 59;
+                            whileLoop();
+                        }
+                        break;
+                    case T__20:
+                        EnterOuterAlt(_localctx, 5);
+                        {
+                            State = 60;
+                            forLoop();
+                        }
+                        break;
+                    case T__21:
+                        EnterOuterAlt(_localctx, 6);
+                        {
+                            State = 61;
+                            functionDeclaration();
+                        }
+                        break;
+                    case ID:
+                        EnterOuterAlt(_localctx, 7);
+                        {
+                            State = 62;
+                            functionCall();
                         }
                         break;
                     default:
@@ -336,19 +407,19 @@ namespace DslCopilot.ClassroomGrammar
             {
                 EnterOuterAlt(_localctx, 1);
                 {
-                    State = 40;
+                    State = 65;
                     Match(T__9);
-                    State = 41;
+                    State = 66;
                     Match(T__10);
-                    State = 42;
+                    State = 67;
                     Match(T__11);
-                    State = 43;
+                    State = 68;
                     Match(T__7);
-                    State = 44;
+                    State = 69;
                     expression(0);
-                    State = 45;
+                    State = 70;
                     Match(T__8);
-                    State = 46;
+                    State = 71;
                     Match(T__12);
                 }
             }
@@ -394,15 +465,15 @@ namespace DslCopilot.ClassroomGrammar
             {
                 EnterOuterAlt(_localctx, 1);
                 {
-                    State = 48;
+                    State = 73;
                     dataType();
-                    State = 49;
+                    State = 74;
                     Match(ID);
-                    State = 50;
+                    State = 75;
                     Match(T__13);
-                    State = 51;
+                    State = 76;
                     expression(0);
-                    State = 52;
+                    State = 77;
                     Match(T__12);
                 }
             }
@@ -438,9 +509,692 @@ namespace DslCopilot.ClassroomGrammar
             {
                 EnterOuterAlt(_localctx, 1);
                 {
-                    State = 54;
+                    State = 79;
                     _la = TokenStream.LA(1);
-                    if (!(_la == T__14 || _la == T__15))
+                    if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 229376L) != 0)))
+                    {
+                        ErrorHandler.RecoverInline(this);
+                    }
+                    else
+                    {
+                        ErrorHandler.ReportMatch(this);
+                        Consume();
+                    }
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class IfStatementContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BooleanExpressionContext booleanExpression()
+            {
+                return GetRuleContext<BooleanExpressionContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BlockContext[] block()
+            {
+                return GetRuleContexts<BlockContext>();
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BlockContext block(int i)
+            {
+                return GetRuleContext<BlockContext>(i);
+            }
+            public IfStatementContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_ifStatement; } }
+        }
+
+        [RuleVersion(0)]
+        public IfStatementContext ifStatement()
+        {
+            IfStatementContext _localctx = new IfStatementContext(Context, State);
+            EnterRule(_localctx, 14, RULE_ifStatement);
+            int _la;
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 81;
+                    Match(T__17);
+                    State = 82;
+                    Match(T__5);
+                    State = 83;
+                    booleanExpression(0);
+                    State = 84;
+                    Match(T__6);
+                    State = 85;
+                    block();
+                    State = 88;
+                    ErrorHandler.Sync(this);
+                    _la = TokenStream.LA(1);
+                    if (_la == T__18)
+                    {
+                        {
+                            State = 86;
+                            Match(T__18);
+                            State = 87;
+                            block();
+                        }
+                    }
+
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class WhileLoopContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BooleanExpressionContext booleanExpression()
+            {
+                return GetRuleContext<BooleanExpressionContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BlockContext block()
+            {
+                return GetRuleContext<BlockContext>(0);
+            }
+            public WhileLoopContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_whileLoop; } }
+        }
+
+        [RuleVersion(0)]
+        public WhileLoopContext whileLoop()
+        {
+            WhileLoopContext _localctx = new WhileLoopContext(Context, State);
+            EnterRule(_localctx, 16, RULE_whileLoop);
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 90;
+                    Match(T__19);
+                    State = 91;
+                    Match(T__5);
+                    State = 92;
+                    booleanExpression(0);
+                    State = 93;
+                    Match(T__6);
+                    State = 94;
+                    block();
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class ForLoopContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode]
+            public VariableDeclarationContext variableDeclaration()
+            {
+                return GetRuleContext<VariableDeclarationContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BooleanExpressionContext booleanExpression()
+            {
+                return GetRuleContext<BooleanExpressionContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ExpressionContext expression()
+            {
+                return GetRuleContext<ExpressionContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BlockContext block()
+            {
+                return GetRuleContext<BlockContext>(0);
+            }
+            public ForLoopContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_forLoop; } }
+        }
+
+        [RuleVersion(0)]
+        public ForLoopContext forLoop()
+        {
+            ForLoopContext _localctx = new ForLoopContext(Context, State);
+            EnterRule(_localctx, 18, RULE_forLoop);
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 96;
+                    Match(T__20);
+                    State = 97;
+                    Match(T__5);
+                    State = 98;
+                    variableDeclaration();
+                    State = 99;
+                    booleanExpression(0);
+                    State = 100;
+                    Match(T__12);
+                    State = 101;
+                    expression(0);
+                    State = 102;
+                    Match(T__6);
+                    State = 103;
+                    block();
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class FunctionDeclarationContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(ClassroomParser.ID, 0); }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BlockContext block()
+            {
+                return GetRuleContext<BlockContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ParameterListContext parameterList()
+            {
+                return GetRuleContext<ParameterListContext>(0);
+            }
+            public FunctionDeclarationContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_functionDeclaration; } }
+        }
+
+        [RuleVersion(0)]
+        public FunctionDeclarationContext functionDeclaration()
+        {
+            FunctionDeclarationContext _localctx = new FunctionDeclarationContext(Context, State);
+            EnterRule(_localctx, 20, RULE_functionDeclaration);
+            int _la;
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 105;
+                    Match(T__21);
+                    State = 106;
+                    Match(ID);
+                    State = 107;
+                    Match(T__5);
+                    State = 109;
+                    ErrorHandler.Sync(this);
+                    _la = TokenStream.LA(1);
+                    if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 229376L) != 0))
+                    {
+                        {
+                            State = 108;
+                            parameterList();
+                        }
+                    }
+
+                    State = 111;
+                    Match(T__6);
+                    State = 112;
+                    block();
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class ParameterListContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ParameterContext[] parameter()
+            {
+                return GetRuleContexts<ParameterContext>();
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ParameterContext parameter(int i)
+            {
+                return GetRuleContext<ParameterContext>(i);
+            }
+            public ParameterListContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_parameterList; } }
+        }
+
+        [RuleVersion(0)]
+        public ParameterListContext parameterList()
+        {
+            ParameterListContext _localctx = new ParameterListContext(Context, State);
+            EnterRule(_localctx, 22, RULE_parameterList);
+            int _la;
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 114;
+                    parameter();
+                    State = 119;
+                    ErrorHandler.Sync(this);
+                    _la = TokenStream.LA(1);
+                    while (_la == T__22)
+                    {
+                        {
+                            {
+                                State = 115;
+                                Match(T__22);
+                                State = 116;
+                                parameter();
+                            }
+                        }
+                        State = 121;
+                        ErrorHandler.Sync(this);
+                        _la = TokenStream.LA(1);
+                    }
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class ParameterContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode]
+            public DataTypeContext dataType()
+            {
+                return GetRuleContext<DataTypeContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(ClassroomParser.ID, 0); }
+            public ParameterContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_parameter; } }
+        }
+
+        [RuleVersion(0)]
+        public ParameterContext parameter()
+        {
+            ParameterContext _localctx = new ParameterContext(Context, State);
+            EnterRule(_localctx, 24, RULE_parameter);
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 122;
+                    dataType();
+                    State = 123;
+                    Match(ID);
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class FunctionCallContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(ClassroomParser.ID, 0); }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ArgumentListContext argumentList()
+            {
+                return GetRuleContext<ArgumentListContext>(0);
+            }
+            public FunctionCallContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_functionCall; } }
+        }
+
+        [RuleVersion(0)]
+        public FunctionCallContext functionCall()
+        {
+            FunctionCallContext _localctx = new FunctionCallContext(Context, State);
+            EnterRule(_localctx, 26, RULE_functionCall);
+            int _la;
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 125;
+                    Match(ID);
+                    State = 126;
+                    Match(T__5);
+                    State = 128;
+                    ErrorHandler.Sync(this);
+                    _la = TokenStream.LA(1);
+                    if ((((_la) & ~0x3f) == 0 && ((1L << _la) & 1202590842944L) != 0))
+                    {
+                        {
+                            State = 127;
+                            argumentList();
+                        }
+                    }
+
+                    State = 130;
+                    Match(T__6);
+                    State = 131;
+                    Match(T__12);
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class ArgumentListContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ExpressionContext[] expression()
+            {
+                return GetRuleContexts<ExpressionContext>();
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ExpressionContext expression(int i)
+            {
+                return GetRuleContext<ExpressionContext>(i);
+            }
+            public ArgumentListContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_argumentList; } }
+        }
+
+        [RuleVersion(0)]
+        public ArgumentListContext argumentList()
+        {
+            ArgumentListContext _localctx = new ArgumentListContext(Context, State);
+            EnterRule(_localctx, 28, RULE_argumentList);
+            int _la;
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 133;
+                    expression(0);
+                    State = 138;
+                    ErrorHandler.Sync(this);
+                    _la = TokenStream.LA(1);
+                    while (_la == T__22)
+                    {
+                        {
+                            {
+                                State = 134;
+                                Match(T__22);
+                                State = 135;
+                                expression(0);
+                            }
+                        }
+                        State = 140;
+                        ErrorHandler.Sync(this);
+                        _la = TokenStream.LA(1);
+                    }
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                ExitRule();
+            }
+            return _localctx;
+        }
+
+        public partial class BooleanExpressionContext : ParserRuleContext
+        {
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ExpressionContext[] expression()
+            {
+                return GetRuleContexts<ExpressionContext>();
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public ExpressionContext expression(int i)
+            {
+                return GetRuleContext<ExpressionContext>(i);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public RelationalOperatorContext relationalOperator()
+            {
+                return GetRuleContext<RelationalOperatorContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode] public ITerminalNode BOOLEAN() { return GetToken(ClassroomParser.BOOLEAN, 0); }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BooleanExpressionContext[] booleanExpression()
+            {
+                return GetRuleContexts<BooleanExpressionContext>();
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
+            public BooleanExpressionContext booleanExpression(int i)
+            {
+                return GetRuleContext<BooleanExpressionContext>(i);
+            }
+            public BooleanExpressionContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_booleanExpression; } }
+        }
+
+        [RuleVersion(0)]
+        public BooleanExpressionContext booleanExpression()
+        {
+            return booleanExpression(0);
+        }
+
+        private BooleanExpressionContext booleanExpression(int _p)
+        {
+            ParserRuleContext _parentctx = Context;
+            int _parentState = State;
+            BooleanExpressionContext _localctx = new BooleanExpressionContext(Context, _parentState);
+            BooleanExpressionContext _prevctx = _localctx;
+            int _startState = 30;
+            EnterRecursionRule(_localctx, 30, RULE_booleanExpression, _p);
+            try
+            {
+                int _alt;
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 149;
+                    ErrorHandler.Sync(this);
+                    switch (TokenStream.LA(1))
+                    {
+                        case T__5:
+                        case Value:
+                        case Note:
+                        case ID:
+                            {
+                                State = 142;
+                                expression(0);
+                                State = 143;
+                                relationalOperator();
+                                State = 144;
+                                expression(0);
+                            }
+                            break;
+                        case BOOLEAN:
+                            {
+                                State = 146;
+                                Match(BOOLEAN);
+                            }
+                            break;
+                        case T__23:
+                            {
+                                State = 147;
+                                Match(T__23);
+                                State = 148;
+                                booleanExpression(3);
+                            }
+                            break;
+                        default:
+                            throw new NoViableAltException(this);
+                    }
+                    Context.Stop = TokenStream.LT(-1);
+                    State = 159;
+                    ErrorHandler.Sync(this);
+                    _alt = Interpreter.AdaptivePredict(TokenStream, 9, Context);
+                    while (_alt != 2 && _alt != global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER)
+                    {
+                        if (_alt == 1)
+                        {
+                            if (ParseListeners != null)
+                                TriggerExitRuleEvent();
+                            _prevctx = _localctx;
+                            {
+                                State = 157;
+                                ErrorHandler.Sync(this);
+                                switch (Interpreter.AdaptivePredict(TokenStream, 8, Context))
+                                {
+                                    case 1:
+                                        {
+                                            _localctx = new BooleanExpressionContext(_parentctx, _parentState);
+                                            PushNewRecursionContext(_localctx, _startState, RULE_booleanExpression);
+                                            State = 151;
+                                            if (!(Precpred(Context, 2))) throw new FailedPredicateException(this, "Precpred(Context, 2)");
+                                            State = 152;
+                                            Match(T__24);
+                                            State = 153;
+                                            booleanExpression(3);
+                                        }
+                                        break;
+                                    case 2:
+                                        {
+                                            _localctx = new BooleanExpressionContext(_parentctx, _parentState);
+                                            PushNewRecursionContext(_localctx, _startState, RULE_booleanExpression);
+                                            State = 154;
+                                            if (!(Precpred(Context, 1))) throw new FailedPredicateException(this, "Precpred(Context, 1)");
+                                            State = 155;
+                                            Match(T__25);
+                                            State = 156;
+                                            booleanExpression(2);
+                                        }
+                                        break;
+                                }
+                            }
+                        }
+                        State = 161;
+                        ErrorHandler.Sync(this);
+                        _alt = Interpreter.AdaptivePredict(TokenStream, 9, Context);
+                    }
+                }
+            }
+            catch (RecognitionException re)
+            {
+                _localctx.exception = re;
+                ErrorHandler.ReportError(this, re);
+                ErrorHandler.Recover(this, re);
+            }
+            finally
+            {
+                UnrollRecursionContexts(_parentctx);
+            }
+            return _localctx;
+        }
+
+        public partial class RelationalOperatorContext : ParserRuleContext
+        {
+            public RelationalOperatorContext(ParserRuleContext parent, int invokingState)
+                : base(parent, invokingState)
+            {
+            }
+            public override int RuleIndex { get { return RULE_relationalOperator; } }
+        }
+
+        [RuleVersion(0)]
+        public RelationalOperatorContext relationalOperator()
+        {
+            RelationalOperatorContext _localctx = new RelationalOperatorContext(Context, State);
+            EnterRule(_localctx, 32, RULE_relationalOperator);
+            int _la;
+            try
+            {
+                EnterOuterAlt(_localctx, 1);
+                {
+                    State = 162;
+                    _la = TokenStream.LA(1);
+                    if (!((((_la) & ~0x3f) == 0 && ((1L << _la) & 2013265932L) != 0)))
                     {
                         ErrorHandler.RecoverInline(this);
                     }
@@ -470,6 +1224,11 @@ namespace DslCopilot.ClassroomGrammar
             [System.Diagnostics.DebuggerNonUserCode] public ITerminalNode Note() { return GetToken(ClassroomParser.Note, 0); }
             [System.Diagnostics.DebuggerNonUserCode] public ITerminalNode ID() { return GetToken(ClassroomParser.ID, 0); }
             [System.Diagnostics.DebuggerNonUserCode]
+            public FunctionCallContext functionCall()
+            {
+                return GetRuleContext<FunctionCallContext>(0);
+            }
+            [System.Diagnostics.DebuggerNonUserCode]
             public ExpressionContext[] expression()
             {
                 return GetRuleContexts<ExpressionContext>();
@@ -498,52 +1257,56 @@ namespace DslCopilot.ClassroomGrammar
             int _parentState = State;
             ExpressionContext _localctx = new ExpressionContext(Context, _parentState);
             ExpressionContext _prevctx = _localctx;
-            int _startState = 14;
-            EnterRecursionRule(_localctx, 14, RULE_expression, _p);
+            int _startState = 34;
+            EnterRecursionRule(_localctx, 34, RULE_expression, _p);
             try
             {
                 int _alt;
                 EnterOuterAlt(_localctx, 1);
                 {
-                    State = 64;
+                    State = 173;
                     ErrorHandler.Sync(this);
-                    switch (TokenStream.LA(1))
+                    switch (Interpreter.AdaptivePredict(TokenStream, 10, Context))
                     {
-                        case Value:
+                        case 1:
                             {
-                                State = 57;
+                                State = 165;
                                 Match(Value);
                             }
                             break;
-                        case Note:
+                        case 2:
                             {
-                                State = 58;
+                                State = 166;
                                 Match(Note);
                             }
                             break;
-                        case ID:
+                        case 3:
                             {
-                                State = 59;
+                                State = 167;
                                 Match(ID);
                             }
                             break;
-                        case T__5:
+                        case 4:
                             {
-                                State = 60;
+                                State = 168;
+                                functionCall();
+                            }
+                            break;
+                        case 5:
+                            {
+                                State = 169;
                                 Match(T__5);
-                                State = 61;
+                                State = 170;
                                 expression(0);
-                                State = 62;
+                                State = 171;
                                 Match(T__6);
                             }
                             break;
-                        default:
-                            throw new NoViableAltException(this);
                     }
                     Context.Stop = TokenStream.LT(-1);
-                    State = 80;
+                    State = 189;
                     ErrorHandler.Sync(this);
-                    _alt = Interpreter.AdaptivePredict(TokenStream, 4, Context);
+                    _alt = Interpreter.AdaptivePredict(TokenStream, 12, Context);
                     while (_alt != 2 && _alt != global::Antlr4.Runtime.Atn.ATN.INVALID_ALT_NUMBER)
                     {
                         if (_alt == 1)
@@ -552,19 +1315,19 @@ namespace DslCopilot.ClassroomGrammar
                                 TriggerExitRuleEvent();
                             _prevctx = _localctx;
                             {
-                                State = 78;
+                                State = 187;
                                 ErrorHandler.Sync(this);
-                                switch (Interpreter.AdaptivePredict(TokenStream, 3, Context))
+                                switch (Interpreter.AdaptivePredict(TokenStream, 11, Context))
                                 {
                                     case 1:
                                         {
                                             _localctx = new ExpressionContext(_parentctx, _parentState);
                                             PushNewRecursionContext(_localctx, _startState, RULE_expression);
-                                            State = 66;
+                                            State = 175;
                                             if (!(Precpred(Context, 5))) throw new FailedPredicateException(this, "Precpred(Context, 5)");
-                                            State = 67;
-                                            Match(T__16);
-                                            State = 68;
+                                            State = 176;
+                                            Match(T__30);
+                                            State = 177;
                                             expression(6);
                                         }
                                         break;
@@ -572,11 +1335,11 @@ namespace DslCopilot.ClassroomGrammar
                                         {
                                             _localctx = new ExpressionContext(_parentctx, _parentState);
                                             PushNewRecursionContext(_localctx, _startState, RULE_expression);
-                                            State = 69;
+                                            State = 178;
                                             if (!(Precpred(Context, 4))) throw new FailedPredicateException(this, "Precpred(Context, 4)");
-                                            State = 70;
-                                            Match(T__17);
-                                            State = 71;
+                                            State = 179;
+                                            Match(T__31);
+                                            State = 180;
                                             expression(5);
                                         }
                                         break;
@@ -584,11 +1347,11 @@ namespace DslCopilot.ClassroomGrammar
                                         {
                                             _localctx = new ExpressionContext(_parentctx, _parentState);
                                             PushNewRecursionContext(_localctx, _startState, RULE_expression);
-                                            State = 72;
+                                            State = 181;
                                             if (!(Precpred(Context, 3))) throw new FailedPredicateException(this, "Precpred(Context, 3)");
-                                            State = 73;
-                                            Match(T__18);
-                                            State = 74;
+                                            State = 182;
+                                            Match(T__32);
+                                            State = 183;
                                             expression(4);
                                         }
                                         break;
@@ -596,20 +1359,20 @@ namespace DslCopilot.ClassroomGrammar
                                         {
                                             _localctx = new ExpressionContext(_parentctx, _parentState);
                                             PushNewRecursionContext(_localctx, _startState, RULE_expression);
-                                            State = 75;
+                                            State = 184;
                                             if (!(Precpred(Context, 2))) throw new FailedPredicateException(this, "Precpred(Context, 2)");
-                                            State = 76;
-                                            Match(T__19);
-                                            State = 77;
+                                            State = 185;
+                                            Match(T__33);
+                                            State = 186;
                                             expression(3);
                                         }
                                         break;
                                 }
                             }
                         }
-                        State = 82;
+                        State = 191;
                         ErrorHandler.Sync(this);
-                        _alt = Interpreter.AdaptivePredict(TokenStream, 4, Context);
+                        _alt = Interpreter.AdaptivePredict(TokenStream, 12, Context);
                     }
                 }
             }
@@ -630,7 +1393,17 @@ namespace DslCopilot.ClassroomGrammar
         {
             switch (ruleIndex)
             {
-                case 7: return expression_sempred((ExpressionContext)_localctx, predIndex);
+                case 15: return booleanExpression_sempred((BooleanExpressionContext)_localctx, predIndex);
+                case 17: return expression_sempred((ExpressionContext)_localctx, predIndex);
+            }
+            return true;
+        }
+        private bool booleanExpression_sempred(BooleanExpressionContext _localctx, int predIndex)
+        {
+            switch (predIndex)
+            {
+                case 0: return Precpred(Context, 2);
+                case 1: return Precpred(Context, 1);
             }
             return true;
         }
@@ -638,39 +1411,75 @@ namespace DslCopilot.ClassroomGrammar
         {
             switch (predIndex)
             {
-                case 0: return Precpred(Context, 5);
-                case 1: return Precpred(Context, 4);
-                case 2: return Precpred(Context, 3);
-                case 3: return Precpred(Context, 2);
+                case 2: return Precpred(Context, 5);
+                case 3: return Precpred(Context, 4);
+                case 4: return Precpred(Context, 3);
+                case 5: return Precpred(Context, 2);
             }
             return true;
         }
 
         private static int[] _serializedATN = {
-        4,1,26,84,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
-        7,7,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,1,1,1,2,1,2,5,2,30,8,2,10,
-        2,12,2,33,9,2,1,2,1,2,1,3,1,3,3,3,39,8,3,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,
-        4,1,5,1,5,1,5,1,5,1,5,1,5,1,6,1,6,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,3,7,
-        65,8,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,1,7,5,7,79,8,7,10,7,
-        12,7,82,9,7,1,7,0,1,14,8,0,2,4,6,8,10,12,14,0,1,1,0,15,16,84,0,16,1,0,
-        0,0,2,21,1,0,0,0,4,27,1,0,0,0,6,38,1,0,0,0,8,40,1,0,0,0,10,48,1,0,0,0,
-        12,54,1,0,0,0,14,64,1,0,0,0,16,17,5,1,0,0,17,18,5,2,0,0,18,19,3,2,1,0,
-        19,20,5,3,0,0,20,1,1,0,0,0,21,22,5,4,0,0,22,23,5,5,0,0,23,24,5,6,0,0,24,
-        25,5,7,0,0,25,26,3,4,2,0,26,3,1,0,0,0,27,31,5,8,0,0,28,30,3,6,3,0,29,28,
-        1,0,0,0,30,33,1,0,0,0,31,29,1,0,0,0,31,32,1,0,0,0,32,34,1,0,0,0,33,31,
-        1,0,0,0,34,35,5,9,0,0,35,5,1,0,0,0,36,39,3,8,4,0,37,39,3,10,5,0,38,36,
-        1,0,0,0,38,37,1,0,0,0,39,7,1,0,0,0,40,41,5,10,0,0,41,42,5,11,0,0,42,43,
-        5,12,0,0,43,44,5,8,0,0,44,45,3,14,7,0,45,46,5,9,0,0,46,47,5,13,0,0,47,
-        9,1,0,0,0,48,49,3,12,6,0,49,50,5,25,0,0,50,51,5,14,0,0,51,52,3,14,7,0,
-        52,53,5,13,0,0,53,11,1,0,0,0,54,55,7,0,0,0,55,13,1,0,0,0,56,57,6,7,-1,
-        0,57,65,5,21,0,0,58,65,5,22,0,0,59,65,5,25,0,0,60,61,5,6,0,0,61,62,3,14,
-        7,0,62,63,5,7,0,0,63,65,1,0,0,0,64,56,1,0,0,0,64,58,1,0,0,0,64,59,1,0,
-        0,0,64,60,1,0,0,0,65,80,1,0,0,0,66,67,10,5,0,0,67,68,5,17,0,0,68,79,3,
-        14,7,6,69,70,10,4,0,0,70,71,5,18,0,0,71,79,3,14,7,5,72,73,10,3,0,0,73,
-        74,5,19,0,0,74,79,3,14,7,4,75,76,10,2,0,0,76,77,5,20,0,0,77,79,3,14,7,
-        3,78,66,1,0,0,0,78,69,1,0,0,0,78,72,1,0,0,0,78,75,1,0,0,0,79,82,1,0,0,
-        0,80,78,1,0,0,0,80,81,1,0,0,0,81,15,1,0,0,0,82,80,1,0,0,0,5,31,38,64,78,
-        80
+        4,1,41,193,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,7,
+        7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,14,
+        2,15,7,15,2,16,7,16,2,17,7,17,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1,1,1,1,
+        1,1,1,2,1,2,5,2,50,8,2,10,2,12,2,53,9,2,1,2,1,2,1,3,1,3,1,3,1,3,1,3,1,
+        3,1,3,3,3,64,8,3,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,4,1,5,1,5,1,5,1,5,1,5,1,
+        5,1,6,1,6,1,7,1,7,1,7,1,7,1,7,1,7,1,7,3,7,89,8,7,1,8,1,8,1,8,1,8,1,8,1,
+        8,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,9,1,10,1,10,1,10,1,10,3,10,110,8,10,
+        1,10,1,10,1,10,1,11,1,11,1,11,5,11,118,8,11,10,11,12,11,121,9,11,1,12,
+        1,12,1,12,1,13,1,13,1,13,3,13,129,8,13,1,13,1,13,1,13,1,14,1,14,1,14,5,
+        14,137,8,14,10,14,12,14,140,9,14,1,15,1,15,1,15,1,15,1,15,1,15,1,15,1,
+        15,3,15,150,8,15,1,15,1,15,1,15,1,15,1,15,1,15,5,15,158,8,15,10,15,12,
+        15,161,9,15,1,16,1,16,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,3,17,
+        174,8,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,1,17,5,
+        17,188,8,17,10,17,12,17,191,9,17,1,17,0,2,30,34,18,0,2,4,6,8,10,12,14,
+        16,18,20,22,24,26,28,30,32,34,0,2,1,0,15,17,2,0,2,3,27,30,198,0,36,1,0,
+        0,0,2,41,1,0,0,0,4,47,1,0,0,0,6,63,1,0,0,0,8,65,1,0,0,0,10,73,1,0,0,0,
+        12,79,1,0,0,0,14,81,1,0,0,0,16,90,1,0,0,0,18,96,1,0,0,0,20,105,1,0,0,0,
+        22,114,1,0,0,0,24,122,1,0,0,0,26,125,1,0,0,0,28,133,1,0,0,0,30,149,1,0,
+        0,0,32,162,1,0,0,0,34,173,1,0,0,0,36,37,5,1,0,0,37,38,5,2,0,0,38,39,3,
+        2,1,0,39,40,5,3,0,0,40,1,1,0,0,0,41,42,5,4,0,0,42,43,5,5,0,0,43,44,5,6,
+        0,0,44,45,5,7,0,0,45,46,3,4,2,0,46,3,1,0,0,0,47,51,5,8,0,0,48,50,3,6,3,
+        0,49,48,1,0,0,0,50,53,1,0,0,0,51,49,1,0,0,0,51,52,1,0,0,0,52,54,1,0,0,
+        0,53,51,1,0,0,0,54,55,5,9,0,0,55,5,1,0,0,0,56,64,3,8,4,0,57,64,3,10,5,
+        0,58,64,3,14,7,0,59,64,3,16,8,0,60,64,3,18,9,0,61,64,3,20,10,0,62,64,3,
+        26,13,0,63,56,1,0,0,0,63,57,1,0,0,0,63,58,1,0,0,0,63,59,1,0,0,0,63,60,
+        1,0,0,0,63,61,1,0,0,0,63,62,1,0,0,0,64,7,1,0,0,0,65,66,5,10,0,0,66,67,
+        5,11,0,0,67,68,5,12,0,0,68,69,5,8,0,0,69,70,3,34,17,0,70,71,5,9,0,0,71,
+        72,5,13,0,0,72,9,1,0,0,0,73,74,3,12,6,0,74,75,5,40,0,0,75,76,5,14,0,0,
+        76,77,3,34,17,0,77,78,5,13,0,0,78,11,1,0,0,0,79,80,7,0,0,0,80,13,1,0,0,
+        0,81,82,5,18,0,0,82,83,5,6,0,0,83,84,3,30,15,0,84,85,5,7,0,0,85,88,3,4,
+        2,0,86,87,5,19,0,0,87,89,3,4,2,0,88,86,1,0,0,0,88,89,1,0,0,0,89,15,1,0,
+        0,0,90,91,5,20,0,0,91,92,5,6,0,0,92,93,3,30,15,0,93,94,5,7,0,0,94,95,3,
+        4,2,0,95,17,1,0,0,0,96,97,5,21,0,0,97,98,5,6,0,0,98,99,3,10,5,0,99,100,
+        3,30,15,0,100,101,5,13,0,0,101,102,3,34,17,0,102,103,5,7,0,0,103,104,3,
+        4,2,0,104,19,1,0,0,0,105,106,5,22,0,0,106,107,5,40,0,0,107,109,5,6,0,0,
+        108,110,3,22,11,0,109,108,1,0,0,0,109,110,1,0,0,0,110,111,1,0,0,0,111,
+        112,5,7,0,0,112,113,3,4,2,0,113,21,1,0,0,0,114,119,3,24,12,0,115,116,5,
+        23,0,0,116,118,3,24,12,0,117,115,1,0,0,0,118,121,1,0,0,0,119,117,1,0,0,
+        0,119,120,1,0,0,0,120,23,1,0,0,0,121,119,1,0,0,0,122,123,3,12,6,0,123,
+        124,5,40,0,0,124,25,1,0,0,0,125,126,5,40,0,0,126,128,5,6,0,0,127,129,3,
+        28,14,0,128,127,1,0,0,0,128,129,1,0,0,0,129,130,1,0,0,0,130,131,5,7,0,
+        0,131,132,5,13,0,0,132,27,1,0,0,0,133,138,3,34,17,0,134,135,5,23,0,0,135,
+        137,3,34,17,0,136,134,1,0,0,0,137,140,1,0,0,0,138,136,1,0,0,0,138,139,
+        1,0,0,0,139,29,1,0,0,0,140,138,1,0,0,0,141,142,6,15,-1,0,142,143,3,34,
+        17,0,143,144,3,32,16,0,144,145,3,34,17,0,145,150,1,0,0,0,146,150,5,37,
+        0,0,147,148,5,24,0,0,148,150,3,30,15,3,149,141,1,0,0,0,149,146,1,0,0,0,
+        149,147,1,0,0,0,150,159,1,0,0,0,151,152,10,2,0,0,152,153,5,25,0,0,153,
+        158,3,30,15,3,154,155,10,1,0,0,155,156,5,26,0,0,156,158,3,30,15,2,157,
+        151,1,0,0,0,157,154,1,0,0,0,158,161,1,0,0,0,159,157,1,0,0,0,159,160,1,
+        0,0,0,160,31,1,0,0,0,161,159,1,0,0,0,162,163,7,1,0,0,163,33,1,0,0,0,164,
+        165,6,17,-1,0,165,174,5,35,0,0,166,174,5,36,0,0,167,174,5,40,0,0,168,174,
+        3,26,13,0,169,170,5,6,0,0,170,171,3,34,17,0,171,172,5,7,0,0,172,174,1,
+        0,0,0,173,164,1,0,0,0,173,166,1,0,0,0,173,167,1,0,0,0,173,168,1,0,0,0,
+        173,169,1,0,0,0,174,189,1,0,0,0,175,176,10,5,0,0,176,177,5,31,0,0,177,
+        188,3,34,17,6,178,179,10,4,0,0,179,180,5,32,0,0,180,188,3,34,17,5,181,
+        182,10,3,0,0,182,183,5,33,0,0,183,188,3,34,17,4,184,185,10,2,0,0,185,186,
+        5,34,0,0,186,188,3,34,17,3,187,175,1,0,0,0,187,178,1,0,0,0,187,181,1,0,
+        0,0,187,184,1,0,0,0,188,191,1,0,0,0,189,187,1,0,0,0,189,190,1,0,0,0,190,
+        35,1,0,0,0,191,189,1,0,0,0,13,51,63,88,109,119,128,138,149,157,159,173,
+        187,189
     };
 
         public static readonly ATN _ATN =
