@@ -3,7 +3,6 @@
   <PropertyGroup>
     <RootNamespace>DslCopilot.Web</RootNamespace>
     <UserSecretsId>31559a6c-60cf-4d2b-8d4e-9c6457d12471</UserSecretsId>
-    <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
