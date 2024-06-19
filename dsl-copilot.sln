@@ -3,11 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{0C51E2FD-6246-4254-A900-EE1B9980B5B3}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{5FBF7E58-6ECC-44EF-918C-BCB560DFB8AD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Web", "src\Web\DslCopilot.Web.csproj", "{7F62A32B-6E30-4E19-9578-D85792DF3884}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.FineTuning.Generator", "src\FineTuning.Generator\DslCopilot.FineTuning.Generator.csproj", "{0F530F16-8931-466D-A1C7-4A60B63A80C5}"
 EndProject
-Project("{888888A0-9F3D-457C-B088-3A5042F75D52}") = "IndexingFunction1", "src\IndexingFunction\IndexingFunction1.pyproj", "{558BB007-5D86-404E-8B33-F9F4689771A6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Web", "src\Web\DslCopilot.Web.csproj", "{9D9C65C0-5AC8-434F-8132-DA6ED376813C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DslCopilot.Core", "src\Core\DslCopilot.Core.csproj", "{4A430A39-DFFB-453F-AD4B-E0B5F6AB5141}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,17 +17,28 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7F62A32B-6E30-4E19-9578-D85792DF3884}.Release|Any CPU.Build.0 = Release|Any CPU
-		{558BB007-5D86-404E-8B33-F9F4689771A6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{558BB007-5D86-404E-8B33-F9F4689771A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F530F16-8931-466D-A1C7-4A60B63A80C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F530F16-8931-466D-A1C7-4A60B63A80C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F530F16-8931-466D-A1C7-4A60B63A80C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F530F16-8931-466D-A1C7-4A60B63A80C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9D9C65C0-5AC8-434F-8132-DA6ED376813C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9D9C65C0-5AC8-434F-8132-DA6ED376813C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9D9C65C0-5AC8-434F-8132-DA6ED376813C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9D9C65C0-5AC8-434F-8132-DA6ED376813C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4A430A39-DFFB-453F-AD4B-E0B5F6AB5141}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4A430A39-DFFB-453F-AD4B-E0B5F6AB5141}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4A430A39-DFFB-453F-AD4B-E0B5F6AB5141}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4A430A39-DFFB-453F-AD4B-E0B5F6AB5141}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0F530F16-8931-466D-A1C7-4A60B63A80C5} = {5FBF7E58-6ECC-44EF-918C-BCB560DFB8AD}
+		{9D9C65C0-5AC8-434F-8132-DA6ED376813C} = {5FBF7E58-6ECC-44EF-918C-BCB560DFB8AD}
+		{4A430A39-DFFB-453F-AD4B-E0B5F6AB5141} = {5FBF7E58-6ECC-44EF-918C-BCB560DFB8AD}
+	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {AEEE109A-7518-4CBF-93EC-7F40F5E98C15}
+		SolutionGuid = {5EDF94FC-090A-400D-9D5C-F72C22A1B50D}
 	EndGlobalSection
 EndGlobal

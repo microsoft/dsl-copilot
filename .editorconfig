@@ -9,15 +9,15 @@ indent_style = space
 
 # XML project files
 [*.{csproj,vbproj,vcxproj,vcxproj.filters,proj,projitems,shproj}]
-indent_size = 2
+indent_size = 4
 
 # XML config files
 [*.{props,targets,ruleset,config,nuspec,resx,vsixmanifest,vsct}]
-indent_size = 2
+indent_size = 4
 
 # Code files
 [*.{cs,csx,vb,vbx}]
-indent_size = 2
+indent_size = 4
 insert_final_newline = true
 charset = utf-8-bom
 ###############################
@@ -138,3 +138,9 @@ dotnet_diagnostic.SKEXP0050.severity = none
 
 # SKEXP0010: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 dotnet_diagnostic.SKEXP0010.severity = none
+
+# SKEXP0110: Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+dotnet_diagnostic.SKEXP0110.severity = silent
+
+# CS3021: Type or member does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute
+dotnet_diagnostic.CS3021.severity = silent

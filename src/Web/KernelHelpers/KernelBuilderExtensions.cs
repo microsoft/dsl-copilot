@@ -1,26 +1,54 @@
 ﻿using Microsoft.KernelMemory;
+using Microsoft.KernelMemory.AI;
 using Microsoft.KernelMemory.AI.OpenAI;
+using Microsoft.KernelMemory.MemoryStorage;
 using Microsoft.SemanticKernel;
 using Microsoft.SemanticKernel.Plugins.Core;
 using Microsoft.SemanticKernel.PromptTemplates.Handlebars;
 using Microsoft.Toolkit.Diagnostics;
 using Microsoft.Extensions.Http.Resilience;
+using Polly;
+using Antlr4.Runtime;
 
 namespace DslCopilot.Web.KernelHelpers;
+using Core;
+using Core.Plugins;
 using Options;
 using Services;
 using FunctionFilters;
-using Microsoft.KernelMemory.AI;
-using Microsoft.KernelMemory.MemoryStorage;
-using Polly;
 
 public static class KernelBuilderExtensions
 {
-  public static void AddKernelWithCodeGenFilters(
+  public static IServiceCollection GenerateAntlrParser<TLexer, TParser>(
+    this IServiceCollection services,
+    string language,
+    Func<AntlrInputStream?, TLexer> lexerFactory,
+    Func<CommonTokenStream?, TParser> parserFactory,
+    Func<TParser, ParserRuleContext> ruleFactory)
+    where TLexer : Lexer
+    where TParser : Parser
+    => services.Configure<CodeValidationRetrievalPluginOptions>(o => o.Parsers[language] = (string input) =>
+    {
+        var charStream = new AntlrInputStream(input);
+        var lexer = lexerFactory(charStream);
+        var tokenStream = new CommonTokenStream(lexer);
+        var parser = parserFactory(tokenStream);
+
+        ErrorListener errorListener = new();
+
+        parser.RemoveErrorListeners();
+        parser.AddErrorListener(errorListener);
+
+        return new(parser, rule: ruleFactory(parser), errorListener);
+    });
+
+  public static IServiceCollection AddKernelWithCodeGenFilters(
     this IServiceCollection services,
     ConsoleService consoleService,
     ChatSessionService chatSessionService,
-    AzureOpenAIOptions? openAiOptions)
+    AzureOpenAIOptions? openAiOptions,
+    LanguageBlobServiceOptions languageBlobServiceOptions,
+    CodeValidationRetrievalPluginOptions codeValidationRetrievalPluginOptions)
   {
     ArgumentNullException.ThrowIfNull(openAiOptions);
     Guard.IsNotNull(openAiOptions.EmbeddingDeploymentName, nameof(openAiOptions.EmbeddingDeploymentName));
@@ -29,9 +57,10 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.ApiKey, nameof(openAiOptions.ApiKey));
     Guard.IsNotNull(openAiOptions.SearchEndpoint, nameof(openAiOptions.SearchEndpoint));
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
+    Guard.IsNotNull(languageBlobServiceOptions.AccountName, nameof(languageBlobServiceOptions.AccountName));
+    Guard.IsNotNull(languageBlobServiceOptions.AccessKey, nameof(languageBlobServiceOptions.AccessKey));
 
     services.AddSingleton<PromptBankService>();
-
     var kernelBuilder = Kernel.CreateBuilder();
     kernelBuilder.AddAzureOpenAIChatCompletion(
         deploymentName: openAiOptions.CompletionDeploymentName,
@@ -71,7 +100,8 @@ public static class KernelBuilderExtensions
 
     kernelBuilder.Services.ConfigureHttpClientDefaults(c =>
     {
-      c.AddResilienceHandler("HandleThrottling", static builder => {
+      c.AddResilienceHandler("HandleThrottling", static builder =>
+      {
         builder.AddRetry(new HttpRetryStrategyOptions
         {
           BackoffType = DelayBackoffType.Exponential,
@@ -81,27 +111,42 @@ public static class KernelBuilderExtensions
       });
     });
 
-    var kernel = kernelBuilder.Build();
-    kernel.Plugins.AddFromFunctions("yaml_plugins", [
-      kernel.CreateFunctionFromPromptYaml(
-        File.ReadAllText("plugins/generateCode.yaml")!,
-        promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
-    ]);
-    var functionFilters = kernel.FunctionInvocationFilters;
-    functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
-    functionFilters.Add(kernel.Services.GetRequiredService<PromptBankFunctionFilter>());
+    kernelBuilder.AddCodeGenAgent(
+      new(openAiOptions.SearchEndpoint, openAiOptions.SearchApiKey, "code-index"),
+      new(languageBlobServiceOptions.AccountName, languageBlobServiceOptions.AccessKey),
+      new(),
+      new());
+    kernelBuilder.AddCodeValidationAgent(codeValidationRetrievalPluginOptions);
 
-    if (openAiOptions.DebugPrompt == true)
+    services.AddTransient(_ => kernelBuilder);
+    services.AddTransient(_ =>
     {
-      var promptFilters = kernel.PromptRenderFilters;
-      promptFilters.Add(kernel.Services.GetRequiredService<DebuggingPromptFilter>());
-    }
+      var kernel = kernelBuilder.Build();
+      kernel.Plugins.AddFromFunctions("yaml_plugins", [
+        kernel.CreateFunctionFromPromptYaml(
+          File.ReadAllText("plugins/generateCode.yaml")!,
+          promptTemplateFactory: new HandlebarsPromptTemplateFactory()),
+      ]);
+      T Get<T>() where T : notnull => kernel.Services.GetRequiredService<T>();
+      var functionFilters = kernel.FunctionInvocationFilters;
+      functionFilters.Add(new CodeRetryFunctionFilter(chatSessionService, consoleService, kernel));
+      functionFilters.Add(Get<PromptBankFunctionFilter>());
 
-    services
-      .AddTransient(_ => kernel)
-      .AddTransient(_ => kernel.Services.GetRequiredService<IMemoryDb>())
-      .AddTransient(_ => kernel.Services.GetRequiredService<ITextEmbeddingGenerator>())
-      .AddTransient(_ => kernel.Services.GetRequiredService<IKernelMemory>());
+      if (openAiOptions.DebugPrompt == true)
+      {
+        var promptFilters = kernel.PromptRenderFilters;
+        promptFilters.Add(Get<DebuggingPromptFilter>());
+      }
+      return kernel;
+    });
 
+    T Get<T>(IServiceProvider provider) where T : notnull
+      => provider.GetRequiredService<Kernel>().Services.GetRequiredService<T>();
+    return services
+      .AddTransient(Get<IMemoryDb>)
+      .AddTransient(Get<ITextEmbeddingGenerator>)
+      .AddTransient(Get<IKernelMemory>)
+      .AddSingleton(Get<GrammarRetrievalPlugins>)
+      .AddSingleton(Get<CodeExampleRetrievalPlugins>);
   }
 }

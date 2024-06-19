@@ -1,96 +1,64 @@
-﻿using DslCopilot.Web.Models;
-using Microsoft.KernelMemory;
+﻿using DslCopilot.Core;
 using Microsoft.SemanticKernel;
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
+using Microsoft.SemanticKernel.Agents;
+using Microsoft.SemanticKernel.ChatCompletion;
 
 namespace DslCopilot.Web.Services;
 public class DslAIService(
-  Kernel kernel,
-  IKernelMemory memory,
+  IKernelBuilder kernelBuilder,
   ChatSessionIdService chatSessionIdService,
   ChatSessionService chatSessionService)
 {
-  public async Task<string> AskAI(string userMessage, string language, string antlrDef, CancellationToken cancellationToken)
+  public async Task<string> AskAI(
+    string userMessage,
+    string language,
+    CancellationToken cancellationToken)
   {
     var chatSessionId = chatSessionIdService.GetChatSessionId();
     var chatHistory = chatSessionService.GetChatSession(chatSessionId);
-    var operationId = Guid.NewGuid().ToString();
 
     if (chatHistory.Count == 0)
     {
       chatHistory.AddSystemMessage($"You are an assistant for generating code that conforms to a given grammar.");
     }
-    
-    var fewShotExamples = await GetLocalExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
-    var indexedExamples = await GetIndexedExamples(userMessage, language, cancellationToken).ConfigureAwait(false);
 
-    fewShotExamples.AddRange(indexedExamples);
-
-    var result = await kernel.InvokeAsync("yaml_plugins", "generateCode", new()
-      {
-        { "input", userMessage },
-        { "history", chatHistory.Select(c => new { role = c.Role.Label, content = c.Content }) },
-        { "language", language },
-        { "grammar", antlrDef },
-        { "fewShotExamples", fewShotExamples },
-        { "chatSessionId", chatSessionId },
-        { "operationId", operationId },
-      }, cancellationToken).ConfigureAwait(false);
-
-    var response = result.GetValue<string>() ?? string.Empty;
+    var response = await AgentChat(
+        userMessage,
+        language,
+        cancellationToken)
+      .ConfigureAwait(false);
     chatHistory.AddUserMessage(userMessage);
     chatHistory.AddAssistantMessage(response);
 
     return response;
   }
 
-  private async Task<List<CodeBlock>> GetLocalExamples(string input, string language, CancellationToken cancellationToken)
+  private async Task<string> AgentChat(
+    string message,
+    string language,
+    CancellationToken cancellationToken)
   {
-    var fewShotExamples = new List<CodeBlock>();
-
-    if (File.Exists($"examples/{language}.yaml"))
+    var agentFactory = new AgentFactory(kernelBuilder);
+    var codeGenAgent = agentFactory.CreateCodeGenerator();
+    var validationAgent = agentFactory.CreateCodeValidator();
+    var agentChat = new AgentGroupChat(codeGenAgent, validationAgent)
     {
-      var examples = await File
-        .ReadAllTextAsync($"examples/{language}.yaml", cancellationToken)
-        .ConfigureAwait(false);
-
-      var deserializer = new DeserializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-        .Build();
-      var codeExamples = deserializer.Deserialize<LanguageExamples>(examples);
-
-      if (codeExamples.Prompts is not null && codeExamples.Prompts.Count > 0)
+      ExecutionSettings = new()
       {
-        fewShotExamples.AddRange(codeExamples.Prompts);
+        TerminationStrategy = new ApprovalTerminationStrategy()
+        {
+          Agents = [validationAgent],
+          MaximumIterations = 6,
+        }
       }
-    }
-
-    return fewShotExamples;
-  }
-
-  private async Task<List<CodeBlock>> GetIndexedExamples(string input, string language, CancellationToken cancellationToken)
-  {
-    var indexedExamples = new List<CodeBlock>();
-    var languageFilter = MemoryFilters.ByTag("language", language);
-    var deserializer = new DeserializerBuilder()
-        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-        .Build();
-
-    var memories = await memory
-      .SearchAsync(query: input, index: "code-index", limit: 3, filter: languageFilter, cancellationToken: cancellationToken)
-      .ConfigureAwait(false);
-
-    var memoryResults = memories.Results
-      .SelectMany(memory => memory.Partitions)
-      .Select(partition => partition.Text);
-
-    foreach(string memoryResult in memoryResults)
-    {
-      var codeBlock = deserializer.Deserialize<CodeBlock>(memoryResult);
-      indexedExamples.Add(codeBlock);
-    }
-
-    return indexedExamples;
+    };
+    // Add a message to the agent chat to set the context.
+    agentChat.AddChatMessage(new(AuthorRole.User,
+      $"Generate code for the '{language}' coding language."));
+    // Add the user message to the agent chat.
+    agentChat.AddChatMessage(new(AuthorRole.User, message));
+    var messages = await agentChat.InvokeAsync(cancellationToken).ToListAsync();
+    var lastMessage = messages.Last(c => c.AuthorName == codeGenAgent.Name);
+    return lastMessage.Content?.ToString() ?? "No response";
   }
 }

@@ -5,5 +5,12 @@
     "azureFunctions.projectLanguage": "Python",
     "azureFunctions.projectRuntime": "~4",
     "debug.internalConsoleOptions": "neverOpen",
-    "azureFunctions.projectSubpath": "src/IndexingFunction"
+    "azureFunctions.projectSubpath": "src/IndexingFunction",
+    "antlr4.generation": {
+        "mode": "internal",
+        "package": "DslCopilot.Grammars",
+        "language": "CSharp",
+        "listeners": true,
+        "visitors": false
+    }
 }
