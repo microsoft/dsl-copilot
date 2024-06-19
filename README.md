@@ -17,10 +17,29 @@ OpenAI has the capability to address code based questions related to languages t
 
 ### Semantic Kernel Flow
 ![alt text](./assets/semantic-flow.png "Semantic Kernel Flow")
-1. Code Generation Prompt - Initial prompt to generate code in the DSL based language
+1. Code Generation Agent - Initial prompt to generate code in the DSL based language. This agent utilizes the grammar, local examples, and indexed example plugins. The grammar plugin is optional and should be able to be removed once a fine tuned model is created. 
 2. Code Compilation and Retry - Before responding to the user call the compiler to validate the code output. If the code is valid move to the next step if not then send OpenAI the code along with the compiler messages and retry compilation with the response.
 3. Linting - Lint the code to ensure it is formatted based on standards. 
-4. Feedback - Prompt the user for feedback and if the code is the correct response allow the user to accept it and store the response in CosmosDb for fine tuning later.
+4. Feedback - Prompt the user for feedback and if the code is the correct response allow the user to accept it and store the response in AI Search for fine tuning later.
+
+### Fine Tuning Pipeline
+![alt text](./assets/fine-tuning-pipeline.png "Fine Tuning Pipeline")
+To limit the number of tokens required in the UI and to allow for the removal of the grammar file, an additional set of code has been created. This code forms a pipeline that accepts a set of prompts and iterates through them to generate a JSONL file. This data will support a custom fine-tuned model with example prompts and responses for the code DSL. Once you have created a fine-tuned model, you should be able to remove the grammar file from the UI pipeline, which will dramatically decrease the number of tokens.
+
+1. The code generation agent utilizes the grammar, local example, and indexed code example plugins to help support the code generation process for fine tuning.
+2. The validation plugin will run the custom parser against the code and report back any errors that need to be fixed.
+
+These steps are run several times to help support valid code generation. 
+#### Example Prompts
+```yml
+- "Create a Classroom program with a main action that initializes a value variable with 10."
+- "Create a Classroom program with a main action that initializes a note variable with 'Hello World'."
+- "Create a Classroom program with a main action that prints the note 'Welcome to class!' using Notes.take."
+- "Create a Classroom program with a main action that initializes a value variable with 5 and another value variable with 10."
+- "Create a Classroom program with a main action that initializes a note variable with 'This is a note' and prints it using Notes.take."
+- "Create a Classroom program with a main action that initializes a value variable with 20 and prints 'Class started!' using Notes.take."
+```
+
 
 # Grammar File
 Code grammar files serve as essential components used by code editors to tokenize and highlight source code. These files break down code into smaller units known as tokens and associate them with specific scopes for syntax highlighting. Editors like Visual Studio Code rely on TextMate grammars, which define rules for tokenization using regular expressions. Additionally, grammar files include a repository of language elements (such as functions and comments) and patterns that correspond to these elements. By visually distinguishing keywords, strings, and other code components, code grammar files significantly enhance readability. Importantly, each programming language has its own dedicated grammar file, defining language-specific rules and features.
