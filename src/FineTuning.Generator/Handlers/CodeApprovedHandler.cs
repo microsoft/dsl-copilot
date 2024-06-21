@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using DSL.FineTuning.Pipeline.Models;
 using MediatR;
 
@@ -26,7 +27,7 @@ namespace DSL.FineTuning.Pipeline.Handlers
                             "user",
                             request.Prompt
                         ),
-                        new AssistantMessage(
+                        new(
                             "assistant",
                             request.Code,
                             1
@@ -36,7 +37,9 @@ namespace DSL.FineTuning.Pipeline.Handlers
 
             using (StreamWriter writer = File.AppendText(_settings.TrainingDataLocation))
             {
-                string tuningData = JsonSerializer.Serialize(fineTuningData);
+                string tuningData = JsonSerializer.Serialize(fineTuningData, new JsonSerializerOptions {
+                    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                });
                 writer.WriteLine(tuningData);
             }
 
@@ -46,8 +49,5 @@ namespace DSL.FineTuning.Pipeline.Handlers
 
     internal record FineTuningData(List<Message> messages);
 
-    internal record Message(string role, string content);
-
-    internal record AssistantMessage(string role, string content, int weight)
-        : Message(role, content);
+    internal record Message(string role, string content, int? weight = null);
 }

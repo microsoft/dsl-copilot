@@ -6,7 +6,7 @@ using Microsoft.SemanticKernel.ChatCompletion;
 namespace DSL.FineTuning.Pipeline.Services;
 internal class OpenAIChatService(IKernelBuilder kernelBuilder)
 {
-    public async Task<(ChatMessageContent chatMessageContent, ChatHistoryKernelAgent primaryAgent)> AgentChat(
+    public async Task<(ChatMessageContent chatMessageContent, ChatHistoryKernelAgent primaryAgent, bool isComplete)> AgentChat(
         string message,
         string language,
         CancellationToken cancellationToken)
@@ -33,7 +33,10 @@ internal class OpenAIChatService(IKernelBuilder kernelBuilder)
         var messages = await agentChat
             .InvokeAsync(cancellationToken)
             .ToListAsync(cancellationToken);
-        return (messages.Last(c => c.AuthorName == codeGenAgent.Name),
-            codeGenAgent);
+        return (
+            messages.Last(c => c.AuthorName == codeGenAgent.Name),
+            codeGenAgent,
+            agentChat.IsComplete
+        );
     }
 }
