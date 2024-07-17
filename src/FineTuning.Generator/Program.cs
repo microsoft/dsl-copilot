@@ -15,6 +15,8 @@ using YamlDotNet.Serialization.NamingConventions;
 using YamlDotNet.Serialization;
 using DSL.FineTuning.Pipeline.Models;
 using Microsoft.Toolkit.Diagnostics;
+using Microsoft.SemanticKernel.Agents;
+using DslCopilot.FineTuning.Generator.Models;
 
 CancellationTokenSource cancellationToken = new();
 var applicationSettings = GetApplicationSettings();
@@ -32,24 +34,38 @@ var prompts = GetCodeGenerationPrompts(applicationSettings.GlobalSettings.Prompt
 
 foreach (var prompt in prompts)
 {
-    (var chatMessageContent, var primaryAgent) = await chatService.AgentChat(
+    (ChatMessageContent chatMessageContent, ChatHistoryKernelAgent primaryAgent, bool isComplete) = await chatService.AgentChat(
         prompt,
         applicationSettings.GlobalSettings.LanguageName,
         cancellationToken.Token
     ).ConfigureAwait(false);
 
-    Guard.IsNotNullOrWhiteSpace(primaryAgent.Instructions, nameof(primaryAgent.Instructions));
-    Guard.IsNotNullOrWhiteSpace(chatMessageContent.AuthorName, nameof(chatMessageContent.AuthorName));
-    Guard.IsNotNullOrWhiteSpace(chatMessageContent.Content, nameof(chatMessageContent.Content));
-    PromptGeneratedCode promptGeneratedCode = new(
-        primaryAgent.Instructions,
-        chatMessageContent.AuthorName,
-        chatMessageContent.Role.ToString(),
-        prompt,
-        chatMessageContent.Content
-    );
 
-    await mediatr.Publish(promptGeneratedCode);
+    if (isComplete)
+    {
+        Guard.IsNotNullOrWhiteSpace(primaryAgent.Instructions, nameof(primaryAgent.Instructions));
+        Guard.IsNotNullOrWhiteSpace(chatMessageContent.AuthorName, nameof(chatMessageContent.AuthorName));
+        Guard.IsNotNullOrWhiteSpace(chatMessageContent.Content, nameof(chatMessageContent.Content));
+        PromptGeneratedCode promptGeneratedCode = new(
+            primaryAgent.Instructions,
+            chatMessageContent.AuthorName,
+            chatMessageContent.Role.ToString(),
+            prompt,
+            chatMessageContent.Content
+        );
+
+        await mediatr.Publish(promptGeneratedCode);
+    }
+    else
+    {
+        PromptCodeFailure promptCodeFailure = new(
+            prompt,
+            chatMessageContent.Content
+        );
+
+        await mediatr.Publish(promptCodeFailure);
+    }
+    
 }
 
 static ApplicationSettings GetApplicationSettings()
