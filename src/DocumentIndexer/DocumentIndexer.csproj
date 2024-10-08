@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="Microsoft.KernelMemory.Core" Version="0.78.241007.1" />
+      <PackageReference Include="Microsoft.KernelMemory.DocumentStorage.AzureBlobs" Version="0.78.241007.1" />
+      <PackageReference Include="Microsoft.KernelMemory.SemanticKernelPlugin" Version="0.78.241007.1" />
+      <PackageReference Include="Microsoft.SemanticKernel" Version="1.21.1" />
+    </ItemGroup>
+
+</Project>

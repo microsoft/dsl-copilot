@@ -11,8 +11,6 @@
 			"additionalVersions": "8.0",
 			"workloads": "aspire, wasm-tools"
 		},
-		"ghcr.io/devcontainers/features/python:1": {},
-		"ghcr.io/devcontainers/features/java:1": {},
 		"ghcr.io/azure/azure-dev/azd:0": {}
 	},
 	"postCreateCommand": [
@@ -23,7 +21,6 @@
 			"extensions": [
 				"ms-dotnettools.csdevkit",
 				"GitHub.copilot",
-				"ms-python.pylint",
 				"mike-lischke.vscode-antlr4"
 			]
 		}
