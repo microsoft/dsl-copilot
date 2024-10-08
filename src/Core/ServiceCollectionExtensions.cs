@@ -17,7 +17,10 @@ public record SearchClientOptions(string Endpoint, string Key, string Index)
 }
 public record BlobClientOptions(string AccountName, string AccessKey)
 {
-    public Uri Endpoint => new($"https://{AccountName}.blob.core.windows.net");
+    private readonly Uri? _endpoint;
+    public BlobClientOptions(Uri uri, string accountName, string accessKey)
+        : this(accountName, accessKey) => _endpoint = uri;
+    public Uri Endpoint => _endpoint ?? new($"https://{AccountName}.blob.core.windows.net");
     public StorageSharedKeyCredential Credential => new(AccountName, AccessKey);
 }
 public static class ServiceCollectionExtensions

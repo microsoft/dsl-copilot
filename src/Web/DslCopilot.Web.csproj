@@ -8,6 +8,7 @@
   <ItemGroup>
     <_ContentIncludedByDefault Remove="wwwroot\dsl-copilot.css" />
   </ItemGroup>
+
   <ItemGroup Label="Compilation">
     <Compile Include="examples\.antlr\*.cs" />
   </ItemGroup>
@@ -26,6 +27,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="examples/*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
