@@ -1,7 +1,8 @@
-using Microsoft.AspNetCore.Builder;
+using Nerdbank.Streams;
+using StreamJsonRpc;
+using WebAPI;
 
 var app = WebApplication.Create(args);
-
 //TODO: Add semantic kernel services as web api.
 //TODO: Expose LSP (Languages Server Protocol) for semantic kernel services.
 // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/
@@ -11,5 +12,26 @@ var app = WebApplication.Create(args);
 //TODO: Create VsCode Extension using the LSP api in a separate dependent branch.
 //TODO: Create GitHub Copilot Extension using the LSP api in a separate dependent branch.
 //TODO: Create a management portal to build and configure the copilot in a separate dependent branch.
+//StreamJsonRpc.JsonRpc.Attach<ICustomTypeProvider>();
+app.MapPost("/api", async (HttpContext context) =>
+{
+    var sockets = context.WebSockets;
+    if (sockets.IsWebSocketRequest)
+    {
+        var webSocket = await sockets.AcceptWebSocketAsync();
+        WebSocketMessageHandler handler = new(webSocket);
 
+        var server = new LanguageServer(
+            webSocket.UsePipeReader().AsStream(),
+            webSocket.UsePipeWriter().AsStream());
+        using var jsonRpc = server.Rpc;
+        jsonRpc.CancelLocallyInvokedMethodsWhenConnectionIsClosed = true;
+        jsonRpc.StartListening();
+        await jsonRpc.Completion;
+    }
+    else
+    {
+        context.Response.StatusCode = StatusCodes.Status400BadRequest;
+    }
+});
 await app.RunAsync();
