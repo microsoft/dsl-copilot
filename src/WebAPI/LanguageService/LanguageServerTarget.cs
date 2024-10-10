@@ -158,9 +158,8 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
     {
         traceSource.TraceEvent(TraceEventType.Information, 0, $"Received: {arg}");
         var parameter = arg.ToObject<CodeActionParams>() ?? throw new InvalidCastException();
-        var result = server.GetCodeActions(parameter);
-        traceSource.TraceEvent(TraceEventType.Information, 0, $"Sent: {JToken.FromObject(result)}");
-        return result;
+        traceSource.TraceEvent(TraceEventType.Information, 0, $"Sent: {JToken.FromObject(parameter)}");
+        return parameter;
     }
 
     [JsonRpcMethod(Methods.CodeActionResolveName)]
@@ -168,9 +167,8 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
     {
         traceSource.TraceEvent(TraceEventType.Information, 0, $"Received: {arg}");
         var parameter = arg.ToObject<CodeAction>() ?? throw new InvalidCastException();
-        var result = server.GetResolvedCodeAction(parameter);
-        traceSource.TraceEvent(TraceEventType.Information, 0, $"Sent: {JToken.FromObject(result)}");
-        return result;
+        traceSource.TraceEvent(TraceEventType.Information, 0, $"Sent: {JToken.FromObject(parameter)}");
+        return parameter;
     }
 
     [JsonRpcMethod(Methods.TextDocumentCompletionName)]
@@ -185,7 +183,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         var itemName = IsIncomplete ? "Incomplete" : "Item";
         for (var i = 0; i < 10; i++)
         {
-            var item = new CompletionItem
+            CompletionItem item = new()
             {
                 Label = $"{itemName} {i + completionItemsNumberRoot}",
                 InsertText = $"{itemName}{i + completionItemsNumberRoot}"
@@ -212,7 +210,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         // So the following 3 items will be sorted: B, A, C.
         // B comes first being SortText the first sorting criteria
         // Then A and C have same SortText, so they are sorted by Label coming A before C
-        var cItem = new CompletionItem
+        CompletionItem cItem = new()
         {
             Label = "C",
             InsertText = "C Kind",
@@ -221,7 +219,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         };
         items.Add(cItem);
 
-        var bItem = new CompletionItem
+        CompletionItem bItem = new()
         {
             Label = "B",
             InsertText = "B Kind",
@@ -230,7 +228,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         };
         items.Add(bItem);
 
-        var aItem = new CompletionItem
+        CompletionItem aItem = new()
         {
             Label = "A",
             InsertText = "A Kind",
@@ -239,7 +237,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         };
         items.Add(aItem);
 
-        var invalidItem = new CompletionItem
+        CompletionItem invalidItem = new()
         {
             Label = "Invalid",
             InsertText = "Invalid Kind",
@@ -251,7 +249,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         var fileNames = new[] { "sample.txt", "myHeader.h", "src/Feature/MyClass.cs", "../resources/img/sample.png", "http://contoso.com/awesome/Index.razor", "http://schemas.microsoft.com/winfx/2006/xaml/file.xml" };
         for (var i = 0; i < fileNames.Length; i++)
         {
-            var item = new CompletionItem
+            CompletionItem item = new()
             {
                 Label = fileNames[i],
                 InsertText = fileNames[i],
@@ -263,13 +261,11 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
             items.Add(item);
         }
 
-        var list = new CompletionList()
+        CompletionList list = new()
         {
             IsIncomplete = IsIncomplete || parameter.Context?.TriggerCharacter == "@" || parameter.Context?.TriggerKind == CompletionTriggerKind.TriggerForIncompleteCompletions && completionItemsNumberRoot % 50 != 0,
             Items = [.. items],
         };
-
-        server.IsIncomplete = false;
 
         if (CompletionServerError)
         {
@@ -347,7 +343,6 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         traceSource.TraceEvent(TraceEventType.Information, 0, $"Received: {arg}");
         var parameter = arg.ToObject<DidChangeConfigurationParams>()
             ?? throw new InvalidCastException();
-        server.SendSettings(parameter);
     }
 
     [JsonRpcMethod(Methods.ShutdownName)]
@@ -358,11 +353,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
     }
 
     [JsonRpcMethod(Methods.ExitName)]
-    public void Exit()
-    {
-        traceSource.TraceEvent(TraceEventType.Information, 0, $"Received Exit notification");
-        server.Exit();
-    }
+    public void Exit() => traceSource.TraceEvent(TraceEventType.Information, 0, $"Received Exit notification");
 
     [JsonRpcMethod(Methods.TextDocumentRenameName)]
     public WorkspaceEdit Rename(JToken arg)

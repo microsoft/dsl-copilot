@@ -5,6 +5,7 @@ namespace WebAPI.LSP;
 
 public partial class LanguageServer
 {
+    List<DiagnosticsInfo> diagnostics = [];
     public void SendDiagnostics() => SendDiagnostics(diagnostics);
 
     public void SendDiagnostics(List<DiagnosticsInfo> sentDiagnostics)
@@ -56,8 +57,6 @@ public partial class LanguageServer
         {
             parameter.Diagnostics = parameter.Diagnostics.Take(maxProblems).ToArray();
         }
-
-        _ = SendMethodNotificationAsync(Methods.TextDocumentPublishDiagnostics, parameter);
     }
 
     public void SendDiagnostics(Uri uri)
@@ -81,11 +80,9 @@ public partial class LanguageServer
         {
             parameter.Diagnostics = parameter.Diagnostics.Take(maxProblems).ToArray();
         }
-
-        _ = SendMethodNotificationAsync(Methods.TextDocumentPublishDiagnostics, parameter);
     }
 
-    private VSDiagnostic? GetDiagnostic(
+    private static VSDiagnostic? GetDiagnostic(
         string line,
         int lineOffset,
         ref int characterOffset,
@@ -159,7 +156,7 @@ public partial class LanguageServer
         }
     }
 
-    private IReadOnlyList<VSDiagnostic> GetDocumentDiagnostics(
+    private List<VSDiagnostic> GetDocumentDiagnostics(
         string[] lines, TextDocumentIdentifier? textDocumentIdentifier = null)
     {
         List<VSDiagnostic> diagnostics = [];

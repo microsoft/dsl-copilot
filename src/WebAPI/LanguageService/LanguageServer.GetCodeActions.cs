@@ -5,9 +5,9 @@ namespace WebAPI.LSP;
 
 using static ActionFactory;
 
-public partial class LanguageServer
+public static class LanguageServerMethods
 {
-    public CodeAction GetResolvedCodeAction(CodeAction parameter)
+    public static CodeAction GetResolvedCodeAction(CodeAction parameter)
     {
         var data = parameter.Data ?? throw new NullReferenceException(nameof(parameter.Data));
         var token = JObject.FromObject(data);
@@ -15,7 +15,7 @@ public partial class LanguageServer
         return resolvedCodeAction ?? throw new InvalidOperationException("Could not resolve code action");
     }
 
-    public object[] GetCodeActions(CodeActionParams parameter)
+    public static object[] GetCodeActions(CodeActionParams parameter)
     {
         var documentUri = parameter.TextDocument.Uri;
         var absolutePath = documentUri.LocalPath.TrimStart('/');

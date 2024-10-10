@@ -1,8 +1,14 @@
-using Nerdbank.Streams;
 using StreamJsonRpc;
-using WebAPI;
+using WebAPI.LanguageService.Targets;
+using WebAPI.LSP;
 
-var app = WebApplication.Create(args);
+var appBuilder = WebApplication.CreateBuilder(args);
+appBuilder.Services.AddSingleton<LanguageServer>();
+appBuilder.Services.AddSingleton(x => new LanguageServerBuilder()
+    .With(config => config with { }));
+appBuilder.Services.AddSingleton(x => x.GetRequiredService<ILanguageServiceBuilder>().Build());
+
+var app = appBuilder.Build();
 //TODO: Add semantic kernel services as web api.
 //TODO: Expose LSP (Languages Server Protocol) for semantic kernel services.
 // https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/
@@ -13,7 +19,7 @@ var app = WebApplication.Create(args);
 //TODO: Create GitHub Copilot Extension using the LSP api in a separate dependent branch.
 //TODO: Create a management portal to build and configure the copilot in a separate dependent branch.
 //StreamJsonRpc.JsonRpc.Attach<ICustomTypeProvider>();
-app.MapPost("/ws", async (HttpContext context) =>
+app.MapPost("/{language}/ws", async (string language, HttpContext context) =>
 {
     var sockets = context.WebSockets;
     if (sockets.IsWebSocketRequest)
@@ -21,10 +27,9 @@ app.MapPost("/ws", async (HttpContext context) =>
         var webSocket = await sockets.AcceptWebSocketAsync();
         WebSocketMessageHandler handler = new(webSocket);
 
-        var server = new LanguageServer(
-            webSocket.UsePipeReader().AsStream(),
-            webSocket.UsePipeWriter().AsStream());
-        using var jsonRpc = server.Rpc;
+        var services = context.RequestServices;
+        var server = services.GetRequiredKeyedService<ILanguageService>(language);
+        using JsonRpc jsonRpc = new(handler, server);
         jsonRpc.CancelLocallyInvokedMethodsWhenConnectionIsClosed = true;
         jsonRpc.StartListening();
         await Task.WhenAll(
@@ -36,4 +41,5 @@ app.MapPost("/ws", async (HttpContext context) =>
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
     }
 });
+
 await app.RunAsync();

@@ -1,53 +1,21 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Newtonsoft.Json.Linq;
-using StreamJsonRpc;
 using System.Diagnostics;
 using System.Text;
 using Range = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
 
 namespace WebAPI.LSP;
 
-public partial class LanguageServer
+public partial class LanguageServer : ObservableObject
 {
-    private int maxProblems = -1;
-    private readonly HeaderDelimitedMessageHandler messageHandler;
-    private readonly LanguageServerTarget target;
+    private readonly int maxProblems = -1;
     private readonly ManualResetEvent disconnectEvent = new(false);
-    private List<DiagnosticsInfo> diagnostics;
     private TextDocumentItem? textDocument = null;
     private string? referenceToFind;
     private int referencesChunkSize;
     private int referencesDelay;
     private int highlightChunkSize;
     private int highlightsDelay;
-    private int counter = 100;
-
-    public LanguageServer(Stream sender, Stream reader, List<DiagnosticsInfo>? initialDiagnostics = null)
-    {
-        TraceSource jsonRpcTraceSource = new("JsonRpc", SourceLevels.All);
-        target = new(this, jsonRpcTraceSource);
-        messageHandler = new(sender, reader);
-        ((JsonMessageFormatter)messageHandler.Formatter).JsonSerializer.Converters.Add(
-            new VSExtensionConverter<TextDocumentIdentifier, VSTextDocumentIdentifier>());
-        rpc = new(messageHandler, target)
-        {
-            TraceSource = jsonRpcTraceSource,
-            ActivityTracingStrategy = new CorrelationManagerTracingStrategy()
-            {
-                TraceSource = jsonRpcTraceSource,
-            }
-        };
-        rpc.Disconnected += OnRpcDisconnected;
-        rpc.StartListening();
-
-        diagnostics = initialDiagnostics ?? [];
-
-        FoldingRanges = [];
-        Symbols = [];
-
-        target.OnInitializeCompletion += OnTargetInitializeCompletion;
-        target.OnInitialized += OnTargetInitialized;
-    }
 
     public string? CustomText
     {
@@ -65,13 +33,13 @@ public partial class LanguageServer
     {
         get;
         set;
-    }
+    } = [];
 
     public IEnumerable<VSSymbolInformation> Symbols
     {
         get;
         set;
-    }
+    } = [];
 
     public IEnumerable<VSProjectContext> Contexts
     {
@@ -80,18 +48,7 @@ public partial class LanguageServer
     } = [];
 
     public bool UsePublishModelDiagnostic { get; set; } = true;
-
-    private string lastCompletionRequest = string.Empty;
-    public string LastCompletionRequest
-    {
-        get => lastCompletionRequest;
-        set
-        {
-            lastCompletionRequest = value ?? string.Empty;
-            NotifyPropertyChanged(nameof(LastCompletionRequest));
-        }
-    }
-
+    public string LastCompletionRequest { get; set; } = string.Empty;
 
     public void OnTextDocumentOpened(DidOpenTextDocumentParams messageParams)
     {
@@ -126,8 +83,6 @@ public partial class LanguageServer
 
     public object[] SendReferences(ReferenceParams args, bool returnLocationsOnly, CancellationToken token)
     {
-        rpc.TraceSource.TraceEvent(TraceEventType.Information, 0, $"Received: {JToken.FromObject(args)}");
-
         IProgress<object[]> progress = args.PartialResultToken 
             ?? throw new NullReferenceException();
         var delay = referencesDelay * 1000;
@@ -148,9 +103,9 @@ public partial class LanguageServer
 
         var lines = textDocument.Text.Split([Environment.NewLine], StringSplitOptions.None);
 
-        var locations = new List<Location>();
+        List<Location> locations = [];
 
-        var locationsChunk = new List<Location>();
+        List<Location> locationsChunk = [];
 
         for (var i = 0; i < lines.Length; i++)
         {
@@ -168,7 +123,6 @@ public partial class LanguageServer
                     if (locationsChunk.Count == referencesChunkSize)
                     {
                         Debug.WriteLine($"Reporting references of {referenceWord}");
-                        rpc.TraceSource.TraceEvent(TraceEventType.Information, 0, $"Report: {JToken.FromObject(locationsChunk)}");
                         progress.Report([.. locationsChunk]);
                         Thread.Sleep(delay);  // Wait between chunks
                         locationsChunk.Clear();
@@ -219,8 +173,8 @@ public partial class LanguageServer
 
         highlightChunkSize = Math.Max(highlightChunkSize, 1);
 
-        var highlights = new List<DocumentHighlight>();
-        var chunk = new List<DocumentHighlight>();
+        List<DocumentHighlight> highlights = [];
+        List<DocumentHighlight> chunk = [];
 
         for (var i = 0; i < lines.Length; i++)
         {
@@ -296,51 +250,11 @@ public partial class LanguageServer
 
     public void SetProjectContexts(IEnumerable<VSProjectContext> contexts) => Contexts = contexts;
 
-    public VSProjectContextList GetProjectContexts()
+    public VSProjectContextList GetProjectContexts() => new()
     {
-        var result = new VSProjectContextList();
-        result.ProjectContexts = Contexts.ToArray();
-        result.DefaultIndex = 0;
-
-        return result;
-    }
-
-    public void ShowMessage(string message, MessageType messageType)
-    {
-        var parameter = new ShowMessageParams
-        {
-            Message = message,
-            MessageType = messageType
-        };
-        _ = SendMethodNotificationAsync(Methods.WindowShowMessage, parameter);
-    }
-
-    public async Task<MessageActionItem> ShowMessageRequestAsync(string message, MessageType messageType, string[] actionItems)
-    {
-        var parameter = new ShowMessageRequestParams
-        {
-            Message = message,
-            MessageType = messageType,
-            Actions = actionItems.Select(a => new MessageActionItem { Title = a }).ToArray()
-        };
-
-        return await SendMethodRequestAsync(Methods.WindowShowMessageRequest, parameter);
-    }
-
-    public void SendSettings(DidChangeConfigurationParams parameter)
-    {
-        CurrentSettings = parameter.Settings.ToString()
-            ?? throw new NullReferenceException();
-        NotifyPropertyChanged(nameof(CurrentSettings));
-
-        var parsedSettings = JToken.Parse(CurrentSettings);
-        var newMaxProblems = parsedSettings.Children().First().Values<int>("maxNumberOfProblems").First();
-        if (maxProblems != newMaxProblems)
-        {
-            maxProblems = newMaxProblems;
-            SendDiagnostics();
-        }
-    }
+        ProjectContexts = Contexts.ToArray(),
+        DefaultIndex = 0
+    };
 
     public void ApplyTextEdit(string text)
     {
@@ -370,7 +284,7 @@ public partial class LanguageServer
             }
         ];
 
-        var parameter = new ApplyWorkspaceEditParams()
+        ApplyWorkspaceEditParams parameter = new()
         {
             Label = "Test Edit",
             Edit = new()
@@ -388,16 +302,6 @@ public partial class LanguageServer
                     }
             }
         };
-
-        _ = Task.Run(async () =>
-        {
-            var response = await SendMethodRequestAsync(Methods.WorkspaceApplyEdit, parameter);
-
-            if (!response.Applied)
-            {
-                Console.WriteLine($"Failed to apply edit: {response.FailureReason}");
-            }
-        });
     }
 
     private Location? GetLocation(string line, int lineOffset, ref int characterOffset, string wordToMatch)
@@ -423,16 +327,18 @@ public partial class LanguageServer
         return null;
     }
 
-    private Range? GetHighlightRange(string line, int lineOffset, ref int characterOffset, string wordToMatch)
+    private static Range? GetHighlightRange(string line, int lineOffset, ref int characterOffset, string wordToMatch)
     {
         if ((characterOffset + wordToMatch.Length) <= line.Length)
         {
             var subString = line.Substring(characterOffset, wordToMatch.Length);
             if (subString.Equals(wordToMatch, StringComparison.OrdinalIgnoreCase))
             {
-                var range = new Range();
-                range.Start = new Position(lineOffset, characterOffset);
-                range.End = new Position(lineOffset, characterOffset + wordToMatch.Length);
+                Range range = new()
+                {
+                    Start = new(lineOffset, characterOffset),
+                    End = new(lineOffset, characterOffset + wordToMatch.Length)
+                };
 
                 return range;
             }
@@ -441,12 +347,12 @@ public partial class LanguageServer
         return null;
     }
 
-    private string GetWordAtPosition(Position position, string[] lines)
+    private static string GetWordAtPosition(Position position, params string[] lines)
     {
         var line = lines.ElementAtOrDefault(position.Line)
             ?? throw new InvalidOperationException("Could not get line at position");
 
-        var result = new StringBuilder();
+        StringBuilder result = new();
 
         var startIdx = position.Character;
         var endIdx = startIdx + 1;
