@@ -1,31 +1,24 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
-public class SymbolInfo
+public class SymbolInfo(string name, SymbolKind kind, string container)
 {
-    public SymbolInfo(string name, SymbolKind kind, string container)
-    {
-        Name = name;
-        Kind = kind;
-        Container = container;
-    }
-
     public string Name
     {
         get;
         set;
-    }
+    } = name;
 
     public SymbolKind Kind
     {
         get;
         set;
-    }
+    } = kind;
 
     public string Container
     {
         get;
         set;
-    }
+    } = container;
 }

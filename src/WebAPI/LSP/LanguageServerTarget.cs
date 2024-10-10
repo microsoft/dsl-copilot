@@ -6,7 +6,7 @@ using System.Diagnostics.Contracts;
 using System.Text.RegularExpressions;
 using Range = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 public class LanguageServerTarget(LanguageServer server, TraceSource traceSource)
 {
@@ -46,7 +46,7 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
     {
         traceSource.TraceEvent(TraceEventType.Information, 0, $"Received: {arg}");
 
-        var capabilities = new MockServerCapabilities
+        MockServerCapabilities capabilities = new()
         {
             TextDocumentSync = new()
             {
@@ -374,12 +374,12 @@ public class LanguageServerTarget(LanguageServer server, TraceSource traceSource
         var wordToReplace = GetWordAtPosition(fullText, renameParams.Position);
         var placesToReplace = GetWordRangesInText(fullText, wordToReplace);
 
-        var result = new WorkspaceEdit
+        WorkspaceEdit result = new()
         {
             DocumentChanges = new TextDocumentEdit[]
             {
                 new() {
-                    TextDocument = new OptionalVersionedTextDocumentIdentifier
+                    TextDocument = new()
                     {
                         Uri = renameParams.TextDocument.Uri,
                         Version = ++version

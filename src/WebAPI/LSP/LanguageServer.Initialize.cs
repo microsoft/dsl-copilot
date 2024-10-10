@@ -1,6 +1,6 @@
 using System.Diagnostics.Contracts;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 public partial class LanguageServer
 {

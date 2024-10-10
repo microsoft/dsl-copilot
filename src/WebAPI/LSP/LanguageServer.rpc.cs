@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using StreamJsonRpc;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 public partial class LanguageServer
 {

@@ -1,38 +1,34 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
-public class DiagnosticsInfo
+public class DiagnosticsInfo(
+    string Text,
+    VSProjectContext context,
+    DiagnosticTag tag,
+    DiagnosticSeverity severity)
 {
-    public DiagnosticsInfo(string Text, VSProjectContext context, DiagnosticTag tag, DiagnosticSeverity severity)
-    {
-        this.Text = Text;
-        Context = context;
-        Tag = tag;
-        Severity = severity;
-    }
-
     public string Text
     {
         get;
         set;
-    }
+    } = Text;
 
     public VSProjectContext Context
     {
         get;
         set;
-    }
+    } = context;
 
     public DiagnosticTag Tag
     {
         get;
         set;
-    }
+    } = tag;
 
     public DiagnosticSeverity Severity
     {
         get;
         set;
-    }
+    } = severity;
 }

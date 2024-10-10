@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Text;
 using Range = Microsoft.VisualStudio.LanguageServer.Protocol.Range;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 public partial class LanguageServer
 {

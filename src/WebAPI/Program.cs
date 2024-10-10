@@ -13,7 +13,7 @@ var app = WebApplication.Create(args);
 //TODO: Create GitHub Copilot Extension using the LSP api in a separate dependent branch.
 //TODO: Create a management portal to build and configure the copilot in a separate dependent branch.
 //StreamJsonRpc.JsonRpc.Attach<ICustomTypeProvider>();
-app.MapPost("/api", async (HttpContext context) =>
+app.MapPost("/ws", async (HttpContext context) =>
 {
     var sockets = context.WebSockets;
     if (sockets.IsWebSocketRequest)
@@ -27,7 +27,9 @@ app.MapPost("/api", async (HttpContext context) =>
         using var jsonRpc = server.Rpc;
         jsonRpc.CancelLocallyInvokedMethodsWhenConnectionIsClosed = true;
         jsonRpc.StartListening();
-        await jsonRpc.Completion;
+        await Task.WhenAll(
+            jsonRpc.Completion,
+            jsonRpc.DispatchCompletion);
     }
     else
     {

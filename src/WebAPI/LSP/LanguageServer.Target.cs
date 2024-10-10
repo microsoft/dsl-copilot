@@ -1,4 +1,4 @@
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 public partial class LanguageServer
 {

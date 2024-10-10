@@ -1,6 +1,6 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 public partial class LanguageServer
 {

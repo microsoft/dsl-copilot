@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.LanguageServer.Protocol;
 using Newtonsoft.Json.Linq;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 using static ActionFactory;
 

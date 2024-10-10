@@ -1,7 +1,7 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 
-namespace WebAPI;
+namespace WebAPI.LSP;
 
 public partial class LanguageServer : INotifyPropertyChanged
 {
