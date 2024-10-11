@@ -5,7 +5,8 @@ using WebAPI.LSP;
 var appBuilder = WebApplication.CreateBuilder(args);
 appBuilder.Services.AddSingleton<LanguageServer>();
 appBuilder.Services.AddSingleton(x => new LanguageServerBuilder()
-    .With(config => config with { }));
+    // .With(config => config with { }));
+    );
 appBuilder.Services.AddSingleton(x => x.GetRequiredService<ILanguageServiceBuilder>().Build());
 
 var app = appBuilder.Build();

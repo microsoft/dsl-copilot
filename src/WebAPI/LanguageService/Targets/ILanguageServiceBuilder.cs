@@ -3,6 +3,6 @@ namespace WebAPI.LanguageService.Targets;
 public interface ILanguageServiceBuilder
 {
     ILanguageServiceBuilder With(
-        Func<LanguageServerFlyweight, LanguageServerFlyweight> flyweightFactory);
+        Func<object, object> flyweightFactory);
     ILanguageService Build();
 }

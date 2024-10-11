@@ -1,11 +1,11 @@
 namespace WebAPI.LanguageService.Targets;
 
 public partial class LanguageServerBuilder(
-    LanguageServerFlyweight? _flyweight = null)
+    object? _flyweight = null)
     : ILanguageServiceBuilder
 {
     //Note: This is to avoid capturing multiple flyweights
-    private LanguageServerFlyweight _flyweight = _flyweight ?? new();
+    private object _flyweight = _flyweight ?? new();
 
     /// <summary>
     /// Exposes a Copy method that passes configurations by value for extension.
@@ -17,9 +17,10 @@ public partial class LanguageServerBuilder(
     ///     .With(config => config with { Mock = true })
     ///     .Build();
     /// </example>
-    public ILanguageServiceBuilder With(Func<LanguageServerFlyweight, LanguageServerFlyweight> flyweightFactory)
+    public ILanguageServiceBuilder With(Func<object, object> flyweightFactory)
         => new LanguageServerBuilder(flyweightFactory(_flyweight));
 
-    public ILanguageService Build() => new ConfigurableLanguageServer(_flyweight);
+    public ILanguageService Build() => throw new NotImplementedException();
+        //new ConfigurableLanguageServer(_flyweight);
 }
 

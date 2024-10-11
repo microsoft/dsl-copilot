@@ -1,69 +1,72 @@
+using System.Collections.Concurrent;
+using System.ComponentModel;
 using Microsoft.VisualStudio.LanguageServer.Protocol;
-using Newtonsoft.Json.Linq;
 using StreamJsonRpc;
 
 namespace WebAPI.LanguageService.Targets;
 
-public interface ILanguageService
+public partial interface ILanguageService
+    : INotifyPropertyChanged
+{
+}
+
+public partial interface ILanguageService
+    : ILinkedObserver<InitializedParams>
 {
     [JsonRpcMethod(Methods.InitializeName)]
-    InitializeResult Initialize(JToken arg);
-    
+    InitializeResult Initialize(InitializeParams arg); 
+
     [JsonRpcMethod(Methods.InitializedName)]
-    void Initialized(JToken arg);
-    
-    [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
-    public void OnTextDocumentOpened(JToken arg);
-    
-    [JsonRpcMethod(Methods.TextDocumentHoverName)]
-    public Hover OnTextDocumentHover(JToken arg);
+    void Initialized(InitializedParams arg)
+        => OnNext(Methods.Initialized, arg);
+}
 
-    [JsonRpcMethod(Methods.TextDocumentDidChangeName)]
-    public void OnTextDocumentChanged(JToken arg);
-    
-    [JsonRpcMethod(Methods.TextDocumentDidCloseName)]
-    public void OnTextDocumentClosed(JToken arg);
-    
-    [JsonRpcMethod(Methods.TextDocumentReferencesName,
-        UseSingleObjectParameterDeserialization = true)]
-    public object[] OnTextDocumentFindReferences(
-        ReferenceParams parameter, CancellationToken token);
-
-    [JsonRpcMethod(Methods.TextDocumentCodeActionName)]
-    public object GetCodeActions(JToken arg);
-
-    [JsonRpcMethod(Methods.CodeActionResolveName)]
-    public object GetResolvedCodeAction(JToken arg);
-
-    [JsonRpcMethod(Methods.TextDocumentCompletionName)]
-    public CompletionList OnTextDocumentCompletion(JToken arg);
-    
-    [JsonRpcMethod(Methods.TextDocumentSignatureHelpName)]
-    public SignatureHelp? OnTextDocumentSignatureHelp(JToken arg);
-
-    [JsonRpcMethod(Methods.WorkspaceDidChangeConfigurationName)]
-    public void OnDidChangeConfiguration(JToken arg);
-
+public partial interface ILanguageService
+    : ILinkedObserver<object?>
+{
     [JsonRpcMethod(Methods.ShutdownName)]
-    public object? Shutdown();
+    public object? Shutdown()
+    {
+        Dispose();
+        return -1;
+    }
 
     [JsonRpcMethod(Methods.ExitName)]
-    public void Exit();
-    
-    [JsonRpcMethod(Methods.TextDocumentRenameName)]
-    public WorkspaceEdit Rename(JToken arg);
+    public void Exit()
+    {
+        var result = Shutdown();
+        OnNext(Methods.Exit, result);
+    }
+}
 
-    [JsonRpcMethod(Methods.TextDocumentFoldingRangeName)]
-    public object GetFoldingRanges(JToken arg);
-    
-    [JsonRpcMethod(VSMethods.GetProjectContextsName)]
-    public object GetProjectContexts(JToken arg);
+public partial interface ILanguageService
+    : ILinkedObserver<DidOpenTextDocumentParams>
+{
+    protected internal ConcurrentDictionary<Uri, TextDocumentItem> _textDocumentCache { get; }
 
-    [JsonRpcMethod(Methods.TextDocumentDocumentSymbolName)]
-    public object GetDocumentSymbols(JToken arg);
+    [JsonRpcMethod(Methods.TextDocumentDidOpenName)]
+    public void DidOpenTextDocument(DidOpenTextDocumentParams arg)
+    {
+        _textDocumentCache.GetOrAdd(arg.TextDocument.Uri, arg.TextDocument);
+        OnNext(Methods.TextDocumentDidOpen, arg);
+    }
+}
 
-    [JsonRpcMethod(Methods.TextDocumentDocumentHighlightName,
-        UseSingleObjectParameterDeserialization = true)]
-    public DocumentHighlight[] GetDocumentHighlights(
-        DocumentHighlightParams arg, CancellationToken token);
+public partial interface ILanguageService
+    : ILinkedObserver<DidCloseTextDocumentParams>
+{
+    [JsonRpcMethod(Methods.TextDocumentDidCloseName)]
+    public void DidCloseTextDocument(DidCloseTextDocumentParams arg)
+    {
+        _textDocumentCache.Remove(arg.TextDocument.Uri, out var _);
+        OnNext(Methods.TextDocumentDidClose, arg);
+    }
+
+    [JsonRpcMethod(Methods.TextDocumentCompletionName)]
+    public CompletionList CompletionTextDocument(CompletionParams arg);
+}
+
+public partial interface ILanguageService
+    : IDisposable
+{
 }

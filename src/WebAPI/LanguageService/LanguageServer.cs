@@ -9,7 +9,6 @@ namespace WebAPI.LSP;
 public partial class LanguageServer : ObservableObject
 {
     private readonly int maxProblems = -1;
-    private readonly ManualResetEvent disconnectEvent = new(false);
     private TextDocumentItem? textDocument = null;
     private string? referenceToFind;
     private int referencesChunkSize;
@@ -113,7 +112,7 @@ public partial class LanguageServer : ObservableObject
 
             for (var j = 0; j < line.Length; j++)
             {
-                var location = GetLocation(line, i, ref j, referenceWord);
+                var location = GetLocation(textDocument.Uri, line, i, j, referenceWord);
 
                 if (location != null)
                 {
@@ -220,20 +219,14 @@ public partial class LanguageServer : ObservableObject
         }
 
         var lines = textDocument.Text.Split([Environment.NewLine], StringSplitOptions.None);
-
         for (var i = 0; i < lines.Length; i++)
         {
             var line = lines[i];
-
             for (var j = 0; j < line.Length; j++)
             {
-
                 foreach (var symbolInfo in symbolsInfo)
                 {
-                    Location? loc = null;
-
-                    loc = GetLocation(line, i, ref j, symbolInfo.Name);
-
+                    var loc = GetLocation(textDocument.Uri, line, i, j, symbolInfo.Name);
                     if (loc != null)
                     {
                         symbolInfo.Location = loc;
@@ -304,27 +297,21 @@ public partial class LanguageServer : ObservableObject
         };
     }
 
-    private Location? GetLocation(string line, int lineOffset, ref int characterOffset, string wordToMatch)
+    private static Location? GetLocation(
+        Uri uri,
+        string line, int lineOffset,
+        int characterOffset, string wordToMatch)
     {
-        if ((characterOffset + wordToMatch.Length) <= line.Length)
+        var symbolLocation = line[characterOffset..].IndexOf(wordToMatch);
+        return new()
         {
-            var subString = line.Substring(characterOffset, wordToMatch.Length);
-            if (subString.Equals(wordToMatch, StringComparison.OrdinalIgnoreCase))
+            Uri = uri,
+            Range = new()
             {
-                if(textDocument == null) throw new NullReferenceException();
-                return new Location
-                {
-                    Uri = textDocument.Uri,
-                    Range = new()
-                    {
-                        Start = new(lineOffset, characterOffset),
-                        End = new(lineOffset, characterOffset + wordToMatch.Length)
-                    }
-                };
+                Start = new(lineOffset, symbolLocation),
+                End = new(lineOffset, symbolLocation + wordToMatch.Length)
             }
-        }
-
-        return null;
+        };
     }
 
     private static Range? GetHighlightRange(string line, int lineOffset, ref int characterOffset, string wordToMatch)
