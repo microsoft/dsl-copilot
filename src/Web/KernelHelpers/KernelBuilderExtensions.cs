@@ -58,7 +58,6 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.SearchEndpoint, nameof(openAiOptions.SearchEndpoint));
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
     Guard.IsNotNull(languageBlobServiceOptions.AccountName, nameof(languageBlobServiceOptions.AccountName));
-    Guard.IsNotNull(languageBlobServiceOptions.AccessKey, nameof(languageBlobServiceOptions.AccessKey));
 
     services.AddSingleton<PromptBankService>();
     var kernelBuilder = Kernel.CreateBuilder();
@@ -113,7 +112,7 @@ public static class KernelBuilderExtensions
 
     kernelBuilder.AddCodeGenAgent(
       new(openAiOptions.SearchEndpoint, openAiOptions.SearchApiKey, "code-index"),
-      new(languageBlobServiceOptions.AccountName, languageBlobServiceOptions.AccessKey),
+      new(languageBlobServiceOptions.AccountName),
       new(),
       new());
     kernelBuilder.AddCodeValidationAgent(codeValidationRetrievalPluginOptions);

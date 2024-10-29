@@ -8,6 +8,8 @@ using Microsoft.SemanticKernel;
 using System.Reflection;
 
 namespace DslCopilot.Core;
+
+using Azure.Identity;
 using Plugins;
 
 public record SearchClientOptions(string Endpoint, string Key, string Index)
@@ -15,10 +17,11 @@ public record SearchClientOptions(string Endpoint, string Key, string Index)
     public Uri EndpointUri => new(Endpoint);
     public AzureKeyCredential Credential => new(Key);
 }
-public record BlobClientOptions(string AccountName, string AccessKey)
+public record BlobClientOptions(string AccountName)
 {
     public Uri Endpoint => new($"https://{AccountName}.blob.core.windows.net");
-    public StorageSharedKeyCredential Credential => new(AccountName, AccessKey);
+    //public StorageSharedKeyCredential Credential => new(AccountName, AccessKey);
+    public DefaultAzureCredential Credential => new();
 }
 public static class ServiceCollectionExtensions
 {
