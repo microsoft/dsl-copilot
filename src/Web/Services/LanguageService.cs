@@ -1,4 +1,5 @@
 ﻿using Azure;
+using Azure.Identity;
 using Azure.Storage;
 using Azure.Storage.Blobs;
 using DslCopilot.Web.Options;
@@ -12,22 +13,21 @@ public class LanguageService
   private readonly BlobContainerClient _blobContainerClient;
   private readonly Dictionary<string, string> _cachedGrammars;
 
-  public LanguageService(IOptions<LanguageBlobServiceOptions> blobServiceOptions)
-  {
-    Guard.IsNotNull(blobServiceOptions, nameof(blobServiceOptions));
-    Guard.IsNotNull(blobServiceOptions.Value, nameof(blobServiceOptions.Value));
-    var value = blobServiceOptions.Value;
-    Guard.IsNotNull(value.AccountName, nameof(value.AccountName));
-    Guard.IsNotNull(value.AccessKey, nameof(value.AccessKey));
-    Guard.IsNotNull(value.ContainerName, nameof(value.ContainerName));
+    public LanguageService(IOptions<LanguageBlobServiceOptions> blobServiceOptions)
+    {
+        Guard.IsNotNull(blobServiceOptions, nameof(blobServiceOptions));
+        Guard.IsNotNull(blobServiceOptions.Value, nameof(blobServiceOptions.Value));
+        var value = blobServiceOptions.Value;
+        Guard.IsNotNull(value.AccountName, nameof(value.AccountName));
+        Guard.IsNotNull(value.ContainerName, nameof(value.ContainerName));
 
-    StorageSharedKeyCredential storageSharedKeyCredential =
-      new(value.AccountName, value.AccessKey);
-    var blobServiceEndpoint = $"https://{value.AccountName}.blob.core.windows.net";
-    _blobServiceClient = new(new(blobServiceEndpoint), storageSharedKeyCredential);
-    _blobContainerClient = _blobServiceClient.GetBlobContainerClient(value.ContainerName);
-    _cachedGrammars = [];
-  }
+        var creds = new DefaultAzureCredential();
+
+        var blobServiceEndpoint = $"https://{value.AccountName}.blob.core.windows.net";
+        _blobServiceClient = new(new(blobServiceEndpoint), creds);
+        _blobContainerClient = _blobServiceClient.GetBlobContainerClient(value.ContainerName);
+        _cachedGrammars = [];
+    }
 
   // The supported languages will be the "folders" at the top tier of the blob container
   public async Task<List<string>> GetSupportedLanguages(CancellationToken token)
