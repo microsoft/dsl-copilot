@@ -59,6 +59,7 @@ public static class KernelBuilderExtensions
     Guard.IsNotNull(openAiOptions.SearchApiKey, nameof(openAiOptions.SearchApiKey));
     Guard.IsNotNull(languageBlobServiceOptions.AccountName, nameof(languageBlobServiceOptions.AccountName));
     Guard.IsNotNull(languageBlobServiceOptions.AccessKey, nameof(languageBlobServiceOptions.AccessKey));
+    Guard.IsNotNull(languageBlobServiceOptions.Endpoint, nameof(languageBlobServiceOptions.Endpoint));
 
     services.AddSingleton<PromptBankService>();
     var kernelBuilder = Kernel.CreateBuilder();
@@ -77,7 +78,7 @@ public static class KernelBuilderExtensions
       .AddSingleton<PromptBankFunctionFilter>()
       .AddKernelMemory(memoryBuilder =>
       {
-        var tokenizer = new DefaultGPTTokenizer();
+        DefaultGPTTokenizer tokenizer = new();
         memoryBuilder
           .WithAzureOpenAITextGeneration(openAiOptions.ToTextGenConfig(), tokenizer)
           .WithAzureOpenAITextEmbeddingGeneration(openAiOptions.ToEmbeddingConfig(), tokenizer)
@@ -113,7 +114,10 @@ public static class KernelBuilderExtensions
 
     kernelBuilder.AddCodeGenAgent(
       new(openAiOptions.SearchEndpoint, openAiOptions.SearchApiKey, "code-index"),
-      new(languageBlobServiceOptions.AccountName, languageBlobServiceOptions.AccessKey),
+      new(
+        new(languageBlobServiceOptions.Endpoint),
+        languageBlobServiceOptions.AccountName,
+        languageBlobServiceOptions.AccessKey),
       new(),
       new());
     kernelBuilder.AddCodeValidationAgent(codeValidationRetrievalPluginOptions);

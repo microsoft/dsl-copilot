@@ -16,12 +16,17 @@ services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 services.AddOutputCache();
-
-services.Configure<AzureOpenAIOptions>(
-  configuration.GetSection("AzureOpenAI"));
-services.Configure<LanguageBlobServiceOptions>(
-  configuration.GetSection("LanguageBlobService"));
-
+var config = configuration
+    .AddEnvironmentVariables()
+    .AddUserSecrets<AzureOpenAIOptions>(optional: true)
+    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", true, true)
+    .Build();
+var aiOptionsSection = config.GetSection("AzureOpenAI");
+var aiOptions = aiOptionsSection.Get<AzureOpenAIOptions>()!;
+var languageBlobServiceSection = config.GetSection("LanguageBlobService");
+var languageBlobServiceOptions = languageBlobServiceSection.Get<LanguageBlobServiceOptions>()!;
+services.Configure<LanguageBlobServiceOptions>(languageBlobServiceSection);
 services.AddSingleton<LanguageService>();
 
 // We need an instances of ChatSessionService and ConsoleService for the Kernel FunctionFilters to use.
@@ -42,20 +47,6 @@ services.GenerateAntlrParser("classroom",
   stream => new ClassroomLexer(stream),
   stream => new ClassroomParser(stream),
   parser => parser.program());
-
-var aiOptions = configuration
-    .SetBasePath("/")
-    .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true)
-    .AddEnvironmentVariables()
-    .AddUserSecrets<AzureOpenAIOptions>(optional: true)
-    .Build()
-    .GetSection("AzureOpenAI")
-    .Get<AzureOpenAIOptions>()!;
-
-var languageBlobServiceOptions = configuration
-    .GetSection("LanguageBlobService")
-    .Get<LanguageBlobServiceOptions>()!;
 
 services.AddKernelWithCodeGenFilters(
   consoleService,

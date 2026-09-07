@@ -23,7 +23,8 @@ public class LanguageService
 
     StorageSharedKeyCredential storageSharedKeyCredential =
       new(value.AccountName, value.AccessKey);
-    var blobServiceEndpoint = $"https://{value.AccountName}.blob.core.windows.net";
+    var blobServiceEndpoint = value.Endpoint
+      ?? $"https://{value.AccountName}.blob.core.windows.net";
     _blobServiceClient = new(new(blobServiceEndpoint), storageSharedKeyCredential);
     _blobContainerClient = _blobServiceClient.GetBlobContainerClient(value.ContainerName);
     _cachedGrammars = [];
